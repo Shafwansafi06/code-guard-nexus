@@ -12,8 +12,7 @@ import {
   Clock,
   AlertTriangle,
   Zap,
-  Lock,
-  Quote
+  Lock
 } from 'lucide-react';
 
 const features = [
@@ -51,23 +50,6 @@ const steps = [
   { step: 4, title: 'Export', description: 'Generate professional reports' },
 ];
 
-const testimonials = [
-  {
-    quote: "Saved me 10 hours on the last assignment! Finally caught students using ChatGPT.",
-    author: "Dr. Sarah Chen",
-    role: "CS Professor, Stanford University",
-  },
-  {
-    quote: "The network analysis feature is incredible. I can see exactly who copied from whom.",
-    author: "Prof. Michael Roberts",
-    role: "Department Head, MIT",
-  },
-  {
-    quote: "Essential tool for the age of AI. Our department now requires it for all courses.",
-    author: "Dr. Emily Johnson",
-    role: "Academic Integrity Officer, Berkeley",
-  },
-];
 
 
 export default function Landing() {
@@ -90,7 +72,6 @@ export default function Landing() {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
               <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-              <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
             </div>
 
             <div className="flex items-center gap-3">
@@ -279,37 +260,6 @@ export default function Landing() {
       </section>
 
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Loved by Professors
-            </h2>
-            <p className="text-muted-foreground">
-              Join thousands of educators saving time every semester
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {testimonials.map((testimonial, index) => (
-              <div 
-                key={index}
-                className="p-8 rounded-xl glass-hover"
-              >
-                <Quote className="w-8 h-8 text-primary/30 mb-4" />
-                <p className="text-foreground-secondary mb-6 italic">
-                  "{testimonial.quote}"
-                </p>
-                <div>
-                  <p className="font-semibold">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-20">
