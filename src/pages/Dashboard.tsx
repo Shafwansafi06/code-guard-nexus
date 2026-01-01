@@ -11,14 +11,18 @@ import {
   Clock,
   Users,
   TrendingUp,
-  Zap
+  Download,
+  Search,
+  Bell,
+  MoreVertical
 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 const quickStats = [
-  { icon: FileText, label: 'Total Scans', value: '45', sublabel: 'this semester', color: 'text-primary' },
-  { icon: AlertTriangle, label: 'High Risk', value: '8', sublabel: 'pairs found', color: 'text-destructive' },
-  { icon: AlertCircle, label: 'Medium Risk', value: '12', sublabel: 'pairs found', color: 'text-warning' },
-  { icon: Clock, label: 'Time Saved', value: '2.4', sublabel: 'hours avg', color: 'text-success' },
+  { icon: FileText, label: 'Total Scans', value: '45', change: '+12%', positive: true },
+  { icon: AlertTriangle, label: 'High Risk', value: '8', change: '-1.9%', positive: true },
+  { icon: AlertCircle, label: 'Medium Risk', value: '12', change: '+2.1%', positive: false },
+  { icon: Clock, label: 'Avg Time', value: '2.4h', change: '-15%', positive: true },
 ];
 
 const recentActivity = [
@@ -52,180 +56,203 @@ const recentActivity = [
 ];
 
 const courses = [
-  {
-    id: 1,
-    name: 'CS101: Data Structures',
-    students: 45,
-    assignments: 5,
-    semester: 'Fall 2024',
-  },
-  {
-    id: 2,
-    name: 'CS201: Algorithms',
-    students: 38,
-    assignments: 3,
-    semester: 'Fall 2024',
-  },
-  {
-    id: 3,
-    name: 'CS301: Operating Systems',
-    students: 32,
-    assignments: 2,
-    semester: 'Fall 2024',
-  },
+  { id: 1, name: 'CS101: Data Structures', students: 45, assignments: 5, semester: 'Fall 2024' },
+  { id: 2, name: 'CS201: Algorithms', students: 38, assignments: 3, semester: 'Fall 2024' },
+  { id: 3, name: 'CS301: Operating Systems', students: 32, assignments: 2, semester: 'Fall 2024' },
+];
+
+const riskDistribution = [
+  { label: 'Clean', percentage: 65, color: 'bg-success' },
+  { label: 'Medium', percentage: 25, color: 'bg-warning' },
+  { label: 'High', percentage: 10, color: 'bg-destructive' },
 ];
 
 export default function Dashboard() {
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Welcome Header */}
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Welcome back, Professor! 👋</h1>
-            <p className="text-muted-foreground">
-              Here's an overview of your plagiarism detection activity.
-            </p>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-semibold">Detailed Analytics</h1>
           </div>
-          <Link to="/assignments/new">
-            <Button variant="hero" className="gap-2">
-              <Plus className="w-4 h-4" />
-              New Scan
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search anything" 
+                className="pl-9 w-64 bg-muted/50 border-border/50 rounded-full"
+              />
+            </div>
+            <Button variant="default" className="gap-2 rounded-lg">
+              <Download className="w-4 h-4" />
+              Get Report
             </Button>
-          </Link>
+            <Button variant="ghost" size="icon" className="rounded-lg">
+              <Bell className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickStats.map((stat, index) => (
-            <div 
-              key={index}
-              className="p-6 rounded-xl glass-hover animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-lg bg-background-tertiary`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+        <p className="text-sm text-muted-foreground">Statistics / Detailed analytic</p>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Main Stat Card - Total Scans */}
+          <div className="md:col-span-2 p-6 rounded-xl bg-card border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total Scans</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Monthly</span>
+                  <span className="text-sm text-muted-foreground">Weekly</span>
                 </div>
+              </div>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="flex items-baseline gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-success/10">
+                <TrendingUp className="w-5 h-5 text-success" />
+              </div>
+              <span className="text-4xl font-bold">824,444.68</span>
+              <span className="text-sm text-success">+1.9%</span>
+            </div>
+            {/* Chart placeholder */}
+            <div className="h-32 flex items-end justify-between gap-1">
+              {[40, 60, 45, 80, 55, 70, 50].map((height, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                  <div 
+                    className="w-full bg-muted rounded-t transition-all hover:bg-muted-foreground/30"
+                    style={{ height: `${height}%` }}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'][i]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Secondary Stats */}
+          <div className="p-6 rounded-xl bg-card border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">High Risk Cases</p>
+              <div className="p-2 rounded-lg bg-destructive/10">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+              </div>
+            </div>
+            <p className="text-3xl font-bold mb-1">$ 45,673</p>
+            <p className="text-sm text-destructive">-1.9% from last week</p>
+            {/* Mini chart */}
+            <div className="mt-4 flex items-end justify-between gap-1 h-16">
+              {[30, 50, 40, 60, 45, 55, 70, 50].map((h, i) => (
+                <div key={i} className="flex-1 bg-muted rounded" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+          </div>
+
+          <div className="p-6 rounded-xl bg-card border border-border/50">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">Clean Files</p>
+              <div className="p-2 rounded-lg bg-success/10">
                 <TrendingUp className="w-4 h-4 text-success" />
               </div>
-              <p className="text-3xl font-bold mb-1">{stat.value}</p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-              <p className="text-xs text-muted-foreground/70">{stat.sublabel}</p>
             </div>
-          ))}
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Recent Activity */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Recent Activity</h2>
-              <Link to="/history" className="text-sm text-primary hover:underline flex items-center gap-1">
-                View all
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <Link 
-                  key={activity.id}
-                  to={`/assignments/${activity.id}/results`}
-                  className="block p-5 rounded-xl glass-hover"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-medium mb-1">{activity.title}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        {activity.time}
-                        <span className="mx-1">•</span>
-                        {activity.files} files analyzed
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-success/10 text-success text-xs">
-                      <CheckCircle className="w-3 h-3" />
-                      Completed
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-destructive" />
-                      <span className="text-destructive">{activity.highRisk} High Risk</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-warning" />
-                      <span className="text-warning">{activity.mediumRisk} Medium Risk</span>
-                    </div>
-                  </div>
-                </Link>
+            <p className="text-3xl font-bold mb-1">$ 45,673</p>
+            <p className="text-sm text-success">-1.9% from last week</p>
+            {/* Mini chart */}
+            <div className="mt-4 flex items-end justify-between gap-1 h-16">
+              {[50, 60, 55, 70, 65, 80, 75, 85].map((h, i) => (
+                <div key={i} className="flex-1 bg-muted rounded" style={{ height: `${h}%` }} />
               ))}
-            </div>
-          </div>
-
-          {/* Active Courses */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Active Courses</h2>
-              <Link to="/courses" className="text-sm text-primary hover:underline flex items-center gap-1">
-                View all
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {courses.map((course) => (
-                <Link 
-                  key={course.id}
-                  to={`/courses/${course.id}`}
-                  className="block p-5 rounded-xl glass-hover"
-                >
-                  <h3 className="font-medium mb-2">{course.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-3">{course.semester}</p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4" />
-                      {course.students} students
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <FileText className="w-4 h-4" />
-                      {course.assignments} assignments
-                    </div>
-                  </div>
-                </Link>
-              ))}
-
-              <Link to="/courses/new">
-                <Button variant="outline" className="w-full gap-2">
-                  <Plus className="w-4 h-4" />
-                  Create New Course
-                </Button>
-              </Link>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="p-6 rounded-xl gradient-card border border-border/50">
-          <div className="flex items-center gap-4">
-            <div className="p-4 rounded-xl bg-primary/10">
-              <Zap className="w-8 h-8 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-1">Ready to scan new submissions?</h3>
-              <p className="text-sm text-muted-foreground">
-                Upload files and get results in under 5 minutes
-              </p>
-            </div>
-            <Link to="/assignments/new">
-              <Button variant="hero" className="gap-2">
-                Start New Scan
-                <ArrowRight className="w-4 h-4" />
+        {/* Bottom Section */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Recent Scans */}
+          <div className="p-6 rounded-xl bg-card border border-border/50">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-semibold">Recent Scans</h2>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
               </Button>
-            </Link>
+            </div>
+            {/* Bar chart placeholder */}
+            <div className="space-y-4">
+              {['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'].map((month, i) => (
+                <div key={month} className="flex items-center gap-4">
+                  <span className="text-xs text-muted-foreground w-8">{month}</span>
+                  <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                    <div 
+                      className="h-full bg-muted-foreground/30 rounded"
+                      style={{ width: `${30 + Math.random() * 50}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Detection Stats */}
+          <div className="p-6 rounded-xl bg-card border border-border/50">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-semibold">Detection Stats</h2>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Circular progress indicators */}
+            <div className="flex items-center justify-around mb-6">
+              {[
+                { label: 'Clean Files', value: 85, color: 'text-success' },
+                { label: 'Medium Risk', value: 33, color: 'text-warning' },
+                { label: 'High Risk', value: 65, color: 'text-destructive' },
+              ].map((stat) => (
+                <div key={stat.label} className="flex flex-col items-center gap-2">
+                  <div className="relative w-20 h-20">
+                    <svg className="w-full h-full -rotate-90">
+                      <circle
+                        cx="40"
+                        cy="40"
+                        r="36"
+                        fill="none"
+                        stroke="hsl(var(--muted))"
+                        strokeWidth="6"
+                      />
+                      <circle
+                        cx="40"
+                        cy="40"
+                        r="36"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        strokeDasharray={`${stat.value * 2.26} 226`}
+                        className={stat.color}
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                      {stat.value}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
+              <p className="text-sm font-medium mb-1">Increase your detection accuracy</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Improving detection accuracy is a strategy aimed at enhancing your professional visibility.
+              </p>
+              <Button size="sm" variant="outline" className="text-xs">
+                Learn More
+              </Button>
+            </div>
           </div>
         </div>
       </div>
