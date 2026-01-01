@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { DashboardPreview } from '@/components/landing/DashboardPreview';
 import { 
   Shield, 
   Brain, 
@@ -9,11 +10,9 @@ import {
   ArrowRight, 
   Play,
   Clock,
-  Users,
   AlertTriangle,
   Zap,
   Lock,
-  BarChart3,
   Quote
 } from 'lucide-react';
 
@@ -209,11 +208,8 @@ export default function Landing() {
                   <div className="w-3 h-3 rounded-full bg-success/70" />
                   <span className="ml-4 text-xs text-muted-foreground font-mono">dashboard.codeguard.ai</span>
                 </div>
-                <div className="aspect-video bg-gradient-to-br from-background-secondary to-background-tertiary flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="w-16 h-16 text-primary/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground">Interactive Dashboard Preview</p>
-                  </div>
+                <div className="aspect-video bg-gradient-to-br from-background-secondary to-background-tertiary">
+                  <DashboardPreview />
                 </div>
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
