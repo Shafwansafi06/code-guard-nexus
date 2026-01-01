@@ -5,6 +5,7 @@ import { ArrowRight, Menu, X, Shield, Play, CheckCircle, Zap } from "lucide-reac
 import { motion, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { Button } from "./button";
+import { DashboardPreview } from "@/components/landing/DashboardPreview";
 
 const Hero2 = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,7 +39,6 @@ const Hero2 = () => {
                 <div className="flex gap-6">
                   <NavItem label="Features" />
                   <NavItem label="How It Works" />
-                  <NavItem label="About" />
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -92,7 +92,6 @@ const Hero2 = () => {
                 <div className="px-4 py-6 space-y-4">
                   <MobileNavItem label="Features" />
                   <MobileNavItem label="How It Works" />
-                  <MobileNavItem label="About" />
 
                   <div className="pt-4 border-t border-border/50 space-y-3">
                     <Link to="/login" className="block">
@@ -203,11 +202,9 @@ const Hero2 = () => {
                   <div className="w-3 h-3 rounded-full bg-success/70" />
                   <span className="ml-4 text-xs text-muted-foreground font-mono">dashboard.codeguard.ai</span>
                 </div>
-                <img 
-                  src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=675&fit=crop"
-                  alt="CodeGuard AI Dashboard Preview"
-                  className="w-full aspect-video object-cover"
-                />
+                <div className="aspect-video bg-gradient-to-br from-background-secondary to-background-tertiary">
+                  <DashboardPreview />
+                </div>
               </div>
             </div>
           </motion.div>

@@ -1,18 +1,14 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { DashboardPreview } from '@/components/landing/DashboardPreview';
+import { Hero2 } from '@/components/ui/hero-2-1';
 import { 
   Shield, 
   Brain, 
   Network, 
   FileText, 
-  CheckCircle, 
-  ArrowRight, 
-  Play,
   Clock,
   AlertTriangle,
-  Zap,
-  Lock
+  ArrowRight
 } from 'lucide-react';
 
 const features = [
@@ -50,121 +46,11 @@ const steps = [
   { step: 4, title: 'Export', description: 'Generate professional reports' },
 ];
 
-
-
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="relative w-8 h-8">
-                <Shield className="w-8 h-8 text-primary" />
-                <div className="absolute inset-0 w-8 h-8 text-primary animate-pulse-glow rounded-full" />
-              </div>
-              <span className="text-xl font-bold">
-                Code<span className="text-primary">Guard</span> AI
-              </span>
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link to="/login">
-                <Button variant="ghost" size="sm">Log In</Button>
-              </Link>
-              <Link to="/signup">
-                <Button variant="hero" size="sm">Try Free</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 particles-bg" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in">
-              <Zap className="w-4 h-4 text-warning" />
-              <span className="text-sm text-muted-foreground">
-                Trusted by 1,000+ CS Professors Worldwide
-              </span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-              Stop Spending{' '}
-              <span className="gradient-text">5 Hours</span>
-              <br />
-              Grading Assignments
-            </h1>
-
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 animate-slide-up stagger-1">
-              Detect plagiarism and AI-generated code in{' '}
-              <span className="text-primary font-semibold">5 minutes</span>.
-              <br />
-              Built for the ChatGPT era.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 animate-slide-up stagger-2">
-              <Link to="/signup">
-                <Button variant="hero" size="lg" className="gap-2 text-lg px-8">
-                  Start Free Scan
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Button variant="glass" size="lg" className="gap-2 text-lg px-8">
-                <Play className="w-5 h-5" />
-                Watch Demo
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground animate-slide-up stagger-3">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-success" />
-                <span>AI-Generated Code Detection</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-success" />
-                <span>Collaboration Network Analysis</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-success" />
-                <span>Export-Ready Reports</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Product Screenshot Preview */}
-          <div className="mt-16 max-w-5xl mx-auto animate-slide-up stagger-4">
-            <div className="relative rounded-xl overflow-hidden glass p-2">
-              <div className="rounded-lg overflow-hidden border border-border/50 bg-background-secondary">
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-background-tertiary/50">
-                  <div className="w-3 h-3 rounded-full bg-destructive/70" />
-                  <div className="w-3 h-3 rounded-full bg-warning/70" />
-                  <div className="w-3 h-3 rounded-full bg-success/70" />
-                  <span className="ml-4 text-xs text-muted-foreground font-mono">dashboard.codeguard.ai</span>
-                </div>
-                <div className="aspect-video bg-gradient-to-br from-background-secondary to-background-tertiary">
-                  <DashboardPreview />
-                </div>
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* Hero Section with Hero2 Component */}
+      <Hero2 />
 
       {/* Problem Section */}
       <section className="py-20">
@@ -259,8 +145,6 @@ export default function Landing() {
         </div>
       </section>
 
-
-
       {/* CTA Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
@@ -305,7 +189,6 @@ export default function Landing() {
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">API</a></li>
                 <li><a href="#" className="hover:text-foreground transition-colors">Changelog</a></li>
               </ul>
