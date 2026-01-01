@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { ArrowRight, Menu, X, Shield, Play, CheckCircle, Zap } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "./button";
 import { DashboardPreview } from "@/components/landing/DashboardPreview";
