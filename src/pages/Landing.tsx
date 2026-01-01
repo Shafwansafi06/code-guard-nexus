@@ -69,40 +69,6 @@ const testimonials = [
   },
 ];
 
-const pricingPlans = [
-  {
-    name: 'Free',
-    price: '$0',
-    period: '/month',
-    features: ['50 files/month', '1 course', 'Basic AI detection', 'Email support'],
-    cta: 'Start Free',
-    popular: false,
-  },
-  {
-    name: 'Pro',
-    price: '$29',
-    period: '/month',
-    features: ['Unlimited files', 'Unlimited courses', 'Full AI detection', 'Network analysis', 'Priority support', 'Export reports'],
-    cta: 'Start 14-Day Trial',
-    popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    features: ['Everything in Pro', 'White-label option', 'SSO integration', 'Dedicated support', 'Custom training', 'API access'],
-    cta: 'Contact Sales',
-    popular: false,
-  },
-];
-
-const logos = [
-  { name: 'MIT', abbr: 'MIT' },
-  { name: 'Stanford', abbr: 'STANFORD' },
-  { name: 'Berkeley', abbr: 'BERKELEY' },
-  { name: 'Carnegie Mellon', abbr: 'CMU' },
-  { name: 'Georgia Tech', abbr: 'GT' },
-];
 
 export default function Landing() {
   return (
@@ -123,7 +89,7 @@ export default function Landing() {
 
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+              <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
               <a href="#testimonials" className="text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
             </div>
 
@@ -218,19 +184,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 border-y border-border/50 bg-background-secondary/50">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-muted-foreground mb-8">Trusted by leading universities worldwide</p>
-          <div className="flex flex-wrap items-center justify-center gap-12">
-            {logos.map((logo) => (
-              <div key={logo.name} className="text-2xl font-bold text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-                {logo.abbr}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Problem Section */}
       <section className="py-20">
@@ -294,7 +247,7 @@ export default function Landing() {
       </section>
 
       {/* How It Works */}
-      <section className="py-20">
+      <section id="how-it-works" className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -325,60 +278,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-background-secondary/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-muted-foreground">
-              Start free, upgrade when you need more
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <div 
-                key={index}
-                className={`relative p-8 rounded-xl ${
-                  plan.popular 
-                    ? 'gradient-border glow-primary' 
-                    : 'glass'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full gradient-hero text-xs font-semibold text-white">
-                    Most Popular
-                  </div>
-                )}
-                
-                <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground">{plan.period}</span>
-                </div>
-                
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="w-4 h-4 text-success" />
-                      <span className="text-foreground-secondary">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button 
-                  variant={plan.popular ? 'hero' : 'outline'} 
-                  className="w-full"
-                >
-                  {plan.cta}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Testimonials */}
       <section id="testimonials" className="py-20">
