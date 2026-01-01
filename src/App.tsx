@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import NewAssignment from "./pages/NewAssignment";
+import Help from "./pages/Help";
 import AssignmentResults from "./pages/AssignmentResults";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/assignments/:id/results" element={<AssignmentResults />} />
           <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/help" element={<Help />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
