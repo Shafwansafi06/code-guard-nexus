@@ -4,14 +4,16 @@
 
 ![CodeGuard Nexus Banner](https://img.shields.io/badge/CodeGuard-Nexus-00F0FF?style=for-the-badge&logo=shield&logoColor=white)
 
-**Next-Generation Academic Integrity Monitoring Platform**
+**Enterprise-Grade Academic Integrity Platform with AI Detection**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Features](#-features) • [Architecture](#-system-architecture) • [Installation](#-installation) • [Documentation](#-documentation) • [API Reference](API_SPECIFICATION.md)
+[Features](#-features) • [Architecture](#-system-architecture) • [Installation](#-installation) • [API](#-api-documentation) • [Database](#-database-schema)
 
 </div>
 
@@ -20,164 +22,31 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
-- [The Problem](#-the-problem)
-- [The Solution](#-the-solution)
-- [Features](#-features)
 - [System Architecture](#-system-architecture)
 - [Technology Stack](#-technology-stack)
+- [Database Schema](#-database-schema)
+- [Features](#-features)
 - [Installation](#-installation)
-- [Usage](#-usage)
+- [Configuration](#-configuration)
 - [API Documentation](#-api-documentation)
 - [Development](#-development)
 - [Deployment](#-deployment)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [Security](#-security)
 
 ---
 
 ## 🎯 Overview
 
-**CodeGuard Nexus** is an enterprise-grade plagiarism detection and academic integrity monitoring platform designed specifically for computer science educators. It combines advanced machine learning algorithms, natural language processing, and graph analytics to detect code plagiarism, AI-generated code, and collaboration networks with unprecedented accuracy.
+**CodeGuard Nexus** is a professional-grade plagiarism detection and code similarity analysis platform designed for academic institutions. It combines advanced algorithms, machine learning models, and network graph analysis to provide educators with comprehensive insights into code submissions, collaboration patterns, and academic integrity violations.
 
-### Key Highlights
+### Key Capabilities
 
-- 🧠 **AI-Powered Detection**: Identify ChatGPT, GitHub Copilot, and other AI-generated code
-- 🌐 **Network Analysis**: Visualize collaboration patterns and detect copying chains
-- ⚡ **Blazing Fast**: Process 1000+ submissions in under 5 minutes
-- 📊 **Comprehensive Reports**: Export-ready PDF reports with evidence
-- 🔒 **Enterprise Security**: SOC 2 compliant with end-to-end encryption
-- 🎨 **Beautiful UI**: Modern, intuitive interface built with React and Tailwind CSS
-
----
-
-## 🚨 The Problem
-
-Modern educators face unprecedented challenges in maintaining academic integrity:
-
-### Traditional Pain Points
-
-| Challenge | Impact | Current Tools |
-|-----------|--------|---------------|
-| **Manual Review** | 5+ hours per assignment reviewing submissions | ❌ Time-consuming and error-prone |
-| **AI-Generated Code** | Students use ChatGPT, Copilot - nearly impossible to prove | ❌ Traditional tools miss AI patterns |
-| **Sophisticated Cheating** | Variable renaming, structure changes, comment modifications | ❌ Basic text comparison fails |
-| **Collaboration Networks** | No way to visualize who copied from whom | ❌ Limited to pairwise comparison |
-| **Report Generation** | Manual evidence collection for integrity committees | ❌ No automated reporting |
-
-### The AI Era Challenge
-
-With the rise of ChatGPT, GitHub Copilot, and other AI coding assistants, educators need tools that can:
-- Distinguish between legitimate AI assistance and wholesale code generation
-- Detect subtle plagiarism patterns beyond simple text matching
-- Identify collaboration networks and copying chains
-- Generate legally-sound evidence for academic integrity proceedings
-
----
-
-## ✨ The Solution
-
-CodeGuard Nexus addresses these challenges with a comprehensive, AI-powered platform:
-
-### Multi-Layer Detection System
-
-```mermaid
-graph TB
-    A[Student Submissions] --> B[Upload & Parse]
-    B --> C[Lexical Analysis]
-    B --> D[Syntactic Analysis]
-    B --> E[Semantic Analysis]
-    B --> F[AI Detection]
-    
-    C --> G[Similarity Matrix]
-    D --> G
-    E --> G
-    F --> H[AI Confidence Score]
-    
-    G --> I[Network Graph]
-    H --> I
-    I --> J[Risk Assessment]
-    J --> K[Comprehensive Report]
-    
-    style A fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
-    style K fill:#B24BF3,stroke:#8B3CB3,stroke-width:2px
-    style I fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
-```
-
-### Detection Algorithms
-
-1. **Lexical Similarity (95% accuracy)**
-   - Token-based comparison
-   - Whitespace normalization
-   - Comment removal
-   - String literal extraction
-
-2. **Syntactic Similarity (89% accuracy)**
-   - Abstract Syntax Tree (AST) comparison
-   - Control flow graph analysis
-   - Function signature matching
-   - Variable renaming detection
-
-3. **Semantic Similarity (88% accuracy)**
-   - Code embeddings using CodeBERT
-   - Behavioral equivalence checking
-   - Algorithm pattern recognition
-   - Complexity metric comparison
-
-4. **AI Detection (92% confidence)**
-   - GPT-pattern recognition
-   - Copilot signature detection
-   - Style consistency analysis
-   - Comment-to-code ratio analysis
-
----
-
-## 🚀 Features
-
-### For Educators
-
-#### 📊 Dashboard Overview
-- Real-time statistics and trends
-- Quick access to flagged submissions
-- Course-level analytics
-- Time-saved metrics
-
-#### 📁 Course Management
-- Multi-course support
-- Student roster management
-- Assignment organization
-- Semester-based filtering
-
-#### 🔍 Assignment Analysis
-- Drag-and-drop batch upload
-- Support for 10+ programming languages
-- Customizable sensitivity settings
-- Real-time progress tracking
-
-#### 🎯 Detection Features
-- **Plagiarism Detection**: Multi-algorithm comparison with 92%+ accuracy
-- **AI Code Detection**: Identify ChatGPT, Copilot, and other AI tools
-- **Network Analysis**: Interactive graph visualization of copying patterns
-- **Side-by-Side Comparison**: Line-by-line code comparison with highlighting
-
-#### 📈 Reporting & Export
-- Professional PDF reports
-- CSV data exports
-- Evidence packages for integrity committees
-- Customizable report templates
-
-### For Administrators
-
-#### 👥 Organization Management
-- Multi-tenant architecture
-- User role management (Admin, Instructor, TA)
-- Usage analytics and billing
-- Custom branding options
-
-#### 🔐 Security & Compliance
-- SOC 2 Type II certified
-- GDPR compliant
-- FERPA compliant
-- End-to-end encryption
+- 🔍 **Multi-Algorithm Detection**: AST analysis, token-based comparison, and ML models
+- 🤖 **AI Code Detection**: Identifies ChatGPT, GitHub Copilot, and LLM-generated code
+- 📊 **Network Visualization**: Interactive D3.js graphs showing collaboration patterns
+- ⚡ **High Performance**: Process 1000+ submissions with optimized algorithms
+- 🔐 **Enterprise Security**: Supabase backend with RLS and JWT authentication
+- 🎨 **Modern UI/UX**: React + TailwindCSS with shadcn/ui components
 
 ---
 
@@ -187,252 +56,245 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "Client Layer"
-        A[Web Application<br/>React + TypeScript]
-        B[Mobile App<br/>React Native]
+    subgraph "Frontend Layer"
+        A[React Web App<br/>Vite + TypeScript]
+        A1[Shadcn UI Components]
+        A2[D3.js Visualizations]
+        A3[Supabase Client]
     end
     
-    subgraph "API Gateway Layer"
-        C[Kong API Gateway<br/>Rate Limiting, Auth]
+    subgraph "Authentication Layer"
+        B[Supabase Auth<br/>JWT + OAuth]
+        B1[Row Level Security]
     end
     
-    subgraph "Application Layer"
-        D[Auth Service<br/>JWT/OAuth2]
-        E[Core API<br/>FastAPI]
-        F[WebSocket Service<br/>Real-time Updates]
+    subgraph "Backend API Layer"
+        C[FastAPI Application<br/>Python 3.11+]
+        C1[REST Endpoints]
+        C2[File Upload Handler]
+        C3[Analysis Orchestrator]
     end
     
-    subgraph "Service Layer"
-        G[Analysis Engine<br/>Similarity Detection]
-        H[AI Detection Service<br/>ML Models]
-        I[Network Analysis<br/>Graph Algorithms]
-        J[Report Generator<br/>PDF/CSV Export]
+    subgraph "Analysis Engine"
+        D[Similarity Detector]
+        E[AI Detection Service]
+        F[Network Analyzer]
+        G[Report Generator]
     end
     
-    subgraph "Task Queue"
-        K[Celery Workers<br/>Distributed Processing]
-        L[RabbitMQ<br/>Message Broker]
+    subgraph "Database Layer"
+        H[(Supabase PostgreSQL)]
+        H1[Organizations]
+        H2[Users & Auth]
+        H3[Courses & Assignments]
+        H4[Submissions & Files]
+        H5[Analysis Results]
+        H6[Comparison Pairs]
     end
     
-    subgraph "Data Layer"
-        M[(PostgreSQL<br/>Relational Data)]
-        N[(MongoDB<br/>Analysis Results)]
-        O[(Neo4j<br/>Network Graph)]
-        P[(Redis<br/>Cache)]
-        Q[S3/MinIO<br/>File Storage]
+    subgraph "Storage Layer"
+        I[Supabase Storage<br/>File Objects]
+        J[Local Storage<br/>Processing Cache]
     end
     
-    subgraph "Monitoring Layer"
-        R[Prometheus<br/>Metrics]
-        S[Grafana<br/>Dashboards]
-        T[ELK Stack<br/>Logs]
-    end
+    A --> A1
+    A --> A2
+    A --> A3
+    A3 --> B
+    A --> C1
     
-    A --> C
-    B --> C
-    C --> D
-    C --> E
-    C --> F
+    C --> C1
+    C --> C2
+    C --> C3
+    C3 --> D
+    C3 --> E
+    C3 --> F
+    C3 --> G
     
-    E --> G
-    E --> H
-    E --> I
+    C --> H
+    B --> H2
+    H --> H1
+    H --> H2
+    H --> H3
+    H --> H4
+    H --> H5
+    H --> H6
+    
+    C2 --> I
+    C2 --> J
+    D --> J
     E --> J
     
-    G --> K
-    H --> K
-    I --> K
-    J --> K
-    
-    K --> L
-    
-    E --> M
-    E --> N
-    E --> O
-    E --> P
-    E --> Q
-    
-    E --> R
-    R --> S
-    E --> T
-    
-    style A fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
-    style E fill:#B24BF3,stroke:#8B3CB3,stroke-width:2px
-    style K fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
-    style M fill:#2ECC71,stroke:#27AE60,stroke-width:2px
+    style A fill:#00F0FF,stroke:#00A8CC,stroke-width:3px
+    style C fill:#B24BF3,stroke:#8B3CB3,stroke-width:3px
+    style H fill:#2ECC71,stroke:#27AE60,stroke-width:3px
+    style B fill:#FF6B6B,stroke:#CC5555,stroke-width:3px
 ```
 
-### Data Flow Architecture
+### Request Flow Architecture
 
 ```mermaid
 sequenceDiagram
     participant U as User/Instructor
-    participant F as Frontend
-    participant API as API Gateway
-    participant Core as Core Service
-    participant Q as Task Queue
-    participant W as Worker
-    participant DB as Databases
+    participant F as React Frontend
+    participant A as Supabase Auth
+    participant API as FastAPI Backend
+    participant E as Analysis Engine
+    participant DB as Supabase DB
     participant S as Storage
     
+    U->>F: Login
+    F->>A: signInWithPassword()
+    A->>DB: Verify Credentials
+    DB-->>A: User Data
+    A-->>F: JWT Token + Session
+    F-->>U: Dashboard
+
     U->>F: Upload Submissions
-    F->>API: POST /submissions/batch-upload
-    API->>Core: Authenticate & Validate
-    Core->>DB: Store Metadata
-    Core->>S: Store Files
-    Core->>Q: Queue Analysis Task
-    Core-->>F: 202 Accepted + Task ID
-    F-->>U: Upload Success
+    F->>API: POST /submissions/upload<br/>[Bearer Token]
+    API->>A: Verify JWT Token
+    A-->>API: User Identity
+    API->>DB: Create Submission Record
+    API->>S: Store Files
+    S-->>API: File URLs
+    API->>E: Queue Analysis Task
+    API-->>F: 201 Created + Submission ID
     
-    Q->>W: Dispatch Task
-    W->>S: Fetch Files
-    W->>W: Lexical Analysis
-    W->>W: Syntactic Analysis
-    W->>W: Semantic Analysis
-    W->>W: AI Detection
-    W->>DB: Store Results
-    W->>Q: Task Complete
+    E->>S: Fetch Files
+    E->>E: Run Similarity Analysis
+    E->>E: AI Detection
+    E->>E: Network Analysis
+    E->>DB: Store Results
+    E->>DB: Create Comparison Pairs
+    E-->>F: WebSocket Update (optional)
     
-    F->>API: WS Connect /ws/analysis
-    Core-->>F: Real-time Progress
-    W-->>F: Match Found Event
-    W-->>F: Analysis Complete
-    
-    U->>F: View Results
-    F->>API: GET /analysis/results
-    API->>Core: Fetch Results
-    Core->>DB: Query Results
-    DB-->>Core: Results Data
-    Core-->>F: Results + Statistics
-    F-->>U: Display Dashboard
+    F->>API: GET /assignments/{id}
+    API->>DB: Fetch Assignment + Stats
+    DB-->>API: Data with Analytics
+    API-->>F: JSON Response
+    F-->>U: Display Results
 ```
 
-### Analysis Pipeline Architecture
+### Component Architecture
 
 ```mermaid
 graph LR
-    A[Code Submission] --> B[Preprocessing]
-    B --> C[Tokenization]
-    B --> D[AST Parsing]
-    B --> E[Code Embedding]
-    
-    C --> F[Lexical Analyzer]
-    D --> G[Syntactic Analyzer]
-    E --> H[Semantic Analyzer]
-    E --> I[AI Detector]
-    
-    F --> J[Similarity Matrix]
-    G --> J
-    H --> J
-    I --> K[AI Score]
-    
-    J --> L[Pairwise Comparison]
-    L --> M[Network Graph Builder]
-    K --> M
-    
-    M --> N[Community Detection]
-    N --> O[Risk Assessment]
-    O --> P[Final Report]
-    
-    style A fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
-    style P fill:#B24BF3,stroke:#8B3CB3,stroke-width:2px
-    style M fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
-```
-
-### Network Graph Analysis
-
-```mermaid
-graph TB
-    subgraph "Submission Network"
-        S1[Student A<br/>Original]
-        S2[Student B<br/>92% Similar]
-        S3[Student C<br/>78% Similar]
-        S4[Student D<br/>Independent]
-        S5[Student E<br/>88% Similar]
-        S6[Student F<br/>Independent]
-        S7[Student G<br/>AI-Generated]
+    subgraph "React Application"
+        R[Router<br/>React Router v6]
+        R --> L[Landing Page]
+        R --> D[Dashboard]
+        R --> C[Courses]
+        R --> AS[Assignments]
+        R --> AN[Analysis View]
+        R --> CO[Comparison View]
+        
+        D --> DC[Dashboard Components]
+        DC --> ST[StatCard]
+        DC --> NG[NetworkGraph]
+        DC --> SP[SimilarityPairCard]
+        
+        AN --> AC[Analysis Components]
+        AC --> UZ[UploadZone]
+        AC --> AO[AdvancedOptions]
+        
+        CO --> CC[Comparison Components]
+        CC --> CD[CodeComparison]
+        CC --> DV[DiffViewer]
     end
     
-    S1 -->|92%| S2
-    S1 -->|78%| S3
-    S2 -->|65%| S7
-    S1 -->|78%| S5
-    S7 -->|85%| S3
-    S5 -->|55%| S7
+    subgraph "Services Layer"
+        SV[Services]
+        SV --> AU[Auth Service]
+        SV --> AP[API Client]
+        SV --> SU[Supabase Client]
+    end
     
-    style S1 fill:#00F0FF,stroke:#00A8CC,stroke-width:3px
-    style S2 fill:#FF4757,stroke:#CC3644,stroke-width:3px
-    style S7 fill:#B24BF3,stroke:#8B3CB3,stroke-width:3px
-    style S4 fill:#2ECC71,stroke:#27AE60,stroke-width:2px
-    style S6 fill:#2ECC71,stroke:#27AE60,stroke-width:2px
+    subgraph "State Management"
+        CTX[Context API]
+        CTX --> AUC[AuthContext]
+        CTX --> TC[ThemeContext]
+    end
+    
+    R --> SV
+    DC --> SV
+    AC --> SV
+    CC --> SV
+    
+    R --> CTX
+    DC --> CTX
+    
+    style R fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
+    style SV fill:#B24BF3,stroke:#8B3CB3,stroke-width:2px
+    style CTX fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
 ```
 
-### Database Schema Overview
+---
+
+## 🗄️ Database Schema
+
+### Entity Relationship Diagram
 
 ```mermaid
 erDiagram
-    USERS ||--o{ COURSES : creates
-    USERS ||--o{ AUDIT_LOGS : generates
-    ORGANIZATIONS ||--o{ USERS : contains
-    COURSES ||--o{ ASSIGNMENTS : has
+    ORGANIZATIONS ||--o{ USERS : has
+    USERS ||--o{ COURSES : instructs
+    COURSES ||--o{ ASSIGNMENTS : contains
     ASSIGNMENTS ||--o{ SUBMISSIONS : receives
-    SUBMISSIONS ||--o{ FILES : contains
-    SUBMISSIONS ||--o{ ANALYSIS_RESULTS : generates
-    FILES ||--o{ ANALYSIS_RESULTS : analyzed_in
-    ASSIGNMENTS ||--o{ COMPARISON_PAIRS : produces
-    SUBMISSIONS ||--o{ COMPARISON_PAIRS : compared_in
-    ASSIGNMENTS ||--o{ REPORTS : generates
-    
-    USERS {
-        uuid id PK
-        string email UK
-        string username UK
-        string password_hash
-        string role
-        uuid organization_id FK
-        boolean is_active
-        timestamp created_at
-    }
+    SUBMISSIONS ||--o{ FILES : includes
+    SUBMISSIONS ||--o| ANALYSIS_RESULTS : has
+    ASSIGNMENTS ||--o{ COMPARISON_PAIRS : generates
+    SUBMISSIONS ||--o{ COMPARISON_PAIRS : "compared in"
     
     ORGANIZATIONS {
         uuid id PK
-        string name
-        string subscription_tier
+        text name
+        text subscription_tier
         jsonb features
+    }
+    
+    USERS {
+        uuid id PK
+        text email UK
+        text username UK
+        text password_hash
+        text role
+        uuid organization_id FK
+        boolean is_active
+        timestamptz created_at
     }
     
     COURSES {
         uuid id PK
-        string name
-        string code
+        text name
+        text code
+        text semester
         uuid instructor_id FK
-        string semester
     }
     
     ASSIGNMENTS {
         uuid id PK
-        string name
+        text name
         uuid course_id FK
-        timestamp due_date
+        timestamptz due_date
         jsonb settings
-        string status
+        text status
     }
     
     SUBMISSIONS {
         uuid id PK
         uuid assignment_id FK
-        string student_identifier
+        text student_identifier
         integer file_count
-        string status
-        timestamp submission_time
+        text status
+        timestamptz submission_time
     }
     
     FILES {
         uuid id PK
         uuid submission_id FK
-        string filename
-        string language
-        string file_hash
+        text filename
+        text language
+        text file_hash
     }
     
     ANALYSIS_RESULTS {
@@ -440,7 +302,7 @@ erDiagram
         uuid submission_id FK
         numeric overall_similarity
         numeric ai_detection_score
-        string risk_level
+        text risk_level
         jsonb detailed_results
     }
     
@@ -450,147 +312,123 @@ erDiagram
         uuid submission_a_id FK
         uuid submission_b_id FK
         numeric similarity_score
-        string status
+        text status
     }
 ```
 
-### Deployment Architecture
+### Table Descriptions
 
-```mermaid
-graph TB
-    subgraph "Load Balancer"
-        LB[AWS ALB / Nginx]
-    end
-    
-    subgraph "Kubernetes Cluster"
-        subgraph "Frontend Pods"
-            F1[React App 1]
-            F2[React App 2]
-            F3[React App 3]
-        end
-        
-        subgraph "API Pods"
-            A1[FastAPI 1]
-            A2[FastAPI 2]
-            A3[FastAPI 3]
-        end
-        
-        subgraph "Worker Pods"
-            W1[Celery Worker 1]
-            W2[Celery Worker 2]
-            W3[Celery Worker 3]
-        end
-        
-        subgraph "Message Queue"
-            RMQ[RabbitMQ Cluster]
-        end
-    end
-    
-    subgraph "Managed Services"
-        RDS[(RDS PostgreSQL<br/>Multi-AZ)]
-        DOC[(DocumentDB<br/>MongoDB Compatible)]
-        GRAPH[(Neo4j Cloud)]
-        CACHE[(ElastiCache Redis)]
-        S3[(S3 Bucket<br/>File Storage)]
-    end
-    
-    subgraph "Monitoring"
-        PROM[Prometheus]
-        GRAF[Grafana]
-        ELK[ELK Stack]
-    end
-    
-    LB --> F1
-    LB --> F2
-    LB --> F3
-    
-    F1 --> A1
-    F2 --> A2
-    F3 --> A3
-    
-    A1 --> RMQ
-    A2 --> RMQ
-    A3 --> RMQ
-    
-    RMQ --> W1
-    RMQ --> W2
-    RMQ --> W3
-    
-    A1 --> RDS
-    A1 --> DOC
-    A1 --> GRAPH
-    A1 --> CACHE
-    A1 --> S3
-    
-    A1 --> PROM
-    PROM --> GRAF
-    A1 --> ELK
-    
-    style LB fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
-    style RMQ fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
-    style RDS fill:#2ECC71,stroke:#27AE60,stroke-width:2px
-```
+#### Organizations
+Stores institution/organization data with subscription tiers and feature flags.
+
+#### Users
+User accounts with role-based access control (admin, instructor, student). Integrates with Supabase Auth.
+
+#### Courses
+Course information managed by instructors. Links to assignments and student rosters.
+
+#### Assignments
+Programming assignments with configurable analysis settings and due dates.
+
+#### Submissions
+Student code submissions with file tracking and processing status.
+
+#### Files
+Individual code files within submissions, with language detection and hash for deduplication.
+
+#### Analysis Results
+Comprehensive analysis results including similarity scores, AI detection, and risk levels.
+
+#### Comparison Pairs
+Pairwise similarity comparisons between submissions within an assignment.
 
 ---
 
 ## 🛠️ Technology Stack
 
 ### Frontend
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: TailwindCSS + shadcn/ui
+- **State Management**: React Context API
+- **Routing**: React Router v6
+- **Data Visualization**: D3.js, Recharts
+- **HTTP Client**: Axios
+- **Authentication**: Supabase Auth Client
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **React** | 18.3+ | UI framework |
-| **TypeScript** | 5.8+ | Type safety |
-| **Vite** | 5.4+ | Build tool & dev server |
-| **TanStack Query** | 5.83+ | Server state management |
-| **React Router** | 6.30+ | Client-side routing |
-| **Tailwind CSS** | 3.4+ | Utility-first styling |
-| **shadcn/ui** | Latest | Component library |
-| **Radix UI** | Latest | Accessible primitives |
-| **Framer Motion** | 12.23+ | Animations |
-| **Recharts** | 2.15+ | Data visualization |
-| **Lucide React** | 0.462+ | Icon library |
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Authentication**: JWT + Supabase Auth
+- **Database**: Supabase (PostgreSQL 15)
+- **ORM**: Supabase Python Client
+- **File Storage**: Supabase Storage
+- **Validation**: Pydantic v2
+- **CORS**: FastAPI CORS Middleware
 
-### Backend (Specification)
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **FastAPI** | 0.104+ | Web framework |
-| **Python** | 3.11+ | Programming language |
-| **PostgreSQL** | 15+ | Relational database |
-| **MongoDB** | 6+ | Document storage |
-| **Neo4j** | 5+ | Graph database |
-| **Redis** | 7+ | Caching & sessions |
-| **Celery** | 5.3+ | Task queue |
-| **RabbitMQ** | 3.12+ | Message broker |
-| **SQLAlchemy** | 2.0+ | ORM |
-| **Pydantic** | 2.0+ | Data validation |
-
-### Analysis & ML
-
-| Technology | Purpose |
-|------------|---------|
-| **tree-sitter** | AST parsing |
-| **NLTK** | Natural language processing |
-| **spaCy** | Advanced NLP |
-| **scikit-learn** | ML algorithms |
-| **transformers** | Hugging Face models |
-| **CodeBERT** | Code embeddings |
-| **radon** | Code complexity metrics |
-| **pygments** | Syntax highlighting |
+### Analysis Engine
+- **Language Detection**: Pygments
+- **Code Parsing**: tree-sitter
+- **Similarity**: NLTK, scikit-learn
+- **AI Detection**: GPT-detector models
+- **Network Analysis**: NetworkX
+- **Report Generation**: ReportLab (PDF)
 
 ### DevOps & Infrastructure
+- **Version Control**: Git + GitHub
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker + Docker Compose
+- **Monitoring**: Sentry (Error Tracking)
+- **Logging**: Python logging + Supabase Logs
 
-| Technology | Purpose |
-|------------|---------|
-| **Docker** | Containerization |
-| **Kubernetes** | Orchestration |
-| **GitHub Actions** | CI/CD |
-| **Prometheus** | Metrics |
-| **Grafana** | Dashboards |
-| **ELK Stack** | Logging |
-| **Sentry** | Error tracking |
-| **AWS/GCP/Azure** | Cloud hosting |
+---
+
+## 🚀 Features
+
+### For Instructors
+
+#### 📊 Dashboard Analytics
+- Real-time submission statistics
+- High-risk case alerts
+- Recent activity timeline
+- Course performance metrics
+
+#### 📚 Course Management
+- Create and organize courses
+- Multi-semester support
+- Assignment templates
+- Student roster management
+
+#### 🔍 Assignment Analysis
+- Drag-and-drop file upload
+- Bulk submission processing
+- Configurable similarity thresholds
+- Language-specific analysis (10+ languages)
+
+#### 🎯 Detection Features
+- **Code Similarity**: Multi-algorithm comparison (lexical, syntactic, semantic)
+- **AI Detection**: Identify ChatGPT, Copilot-generated code
+- **Network Graph**: Visualize copying patterns and collaboration
+- **Side-by-Side Comparison**: Highlighted diff view with match scores
+
+#### 📈 Reporting
+- Comprehensive PDF reports
+- CSV export for further analysis
+- Evidence packages for integrity committees
+- Configurable report templates
+
+### For Administrators
+
+#### 🏢 Organization Management
+- Multi-tenant architecture
+- Role-based access control
+- Usage analytics
+- Subscription tier management
+
+#### 🔐 Security & Compliance
+- Row-level security (RLS)
+- JWT authentication
+- Encrypted data at rest
+- Audit logging
 
 ---
 
@@ -598,32 +436,34 @@ graph TB
 
 ### Prerequisites
 
-- **Node.js** 18+ and npm/bun
-- **Python** 3.11+ (for backend development)
-- **Docker** & Docker Compose (for full stack)
-- **Git**
+- **Node.js**: v18+ and npm/bun
+- **Python**: 3.11+
+- **Supabase Account**: Free tier available
+- **Git**: For version control
 
 ### Frontend Setup
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/code-guard-nexus.git
+git clone https://github.com/yourusername/code-guard-nexus.git
 cd code-guard-nexus
 
-# Install dependencies (using bun or npm)
-bun install
-# or
+# Install dependencies
 npm install
+# or
+bun install
+
+# Configure environment variables
+cp .env.example .env
+# Edit .env with your Supabase credentials
 
 # Start development server
-bun run dev
-# or
 npm run dev
+# or
+bun dev
 ```
 
-The application will be available at `http://localhost:5173`
-
-### Backend Setup (When Available)
+### Backend Setup
 
 ```bash
 # Navigate to backend directory
@@ -636,458 +476,404 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
+# Configure environment variables
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your Supabase credentials
 
-# Run database migrations
-alembic upgrade head
-
-# Start the server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Run development server
+uvicorn app.main:app --reload
 ```
 
-### Docker Compose Setup (Full Stack)
+### Database Setup
 
-```bash
-# Start all services
-docker-compose up -d
+1. **Create Supabase Project**
+   - Go to [supabase.com](https://supabase.com)
+   - Create a new project
+   - Copy your project URL and anon key
 
-# View logs
-docker-compose logs -f
+2. **Run Database Migrations**
+   ```sql
+   -- Execute the SQL schema provided in database/schema.sql
+   -- Or use Supabase SQL Editor
+   ```
 
-# Stop services
-docker-compose down
-```
-
-Services will be available at:
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8000`
-- API Docs: `http://localhost:8000/docs`
-- PostgreSQL: `localhost:5432`
-- MongoDB: `localhost:27017`
-- Redis: `localhost:6379`
+3. **Configure Row Level Security (RLS)**
+   ```sql
+   -- Enable RLS on all tables
+   ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
+   -- ... (for all tables)
+   
+   -- Create policies (see database/policies.sql)
+   ```
 
 ---
 
-## 📖 Usage
+## ⚙️ Configuration
 
-### Quick Start Guide
+### Frontend Environment Variables
 
-1. **Create an Account**
-   ```
-   Navigate to /signup and register with your university email
-   ```
+```env
+# .env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_API_URL=http://localhost:8000/api/v1
+```
 
-2. **Create a Course**
-   ```
-   Dashboard → Courses → Create Course
-   Fill in course details (name, code, semester)
-   ```
+### Backend Environment Variables
 
-3. **Create an Assignment**
-   ```
-   Course Details → New Assignment
-   Configure detection settings:
-   - Sensitivity: 85% (recommended)
-   - AI Detection: Enabled
-   - Network Analysis: Enabled
-   ```
+```env
+# backend/.env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-role-key
 
-4. **Upload Submissions**
-   ```
-   Assignment → Upload Submissions
-   
-   Supported formats:
-   - Individual files (drag & drop)
-   - ZIP archive (batch upload)
-   
-   Supported languages:
-   - Python, Java, C++, C, JavaScript, TypeScript
-   - Go, Rust, Ruby, PHP
-   ```
+API_V1_STR=/api/v1
+PROJECT_NAME=CodeGuard Nexus API
+DEBUG=True
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 
-5. **Review Results**
-   ```
-   Assignment Results → Dashboard
-   - View similarity scores
-   - Examine network graph
-   - Review flagged submissions
-   - Generate reports
-   ```
-
-### Configuration Options
-
-#### Sensitivity Settings
-- **50-70%**: Lenient - Only catch blatant copying
-- **70-85%**: Balanced - Recommended for most assignments
-- **85-95%**: Strict - Flag similar approaches
-- **95-100%**: Very Strict - Flag minor similarities
-
-#### Detection Modes
-- **Lexical**: Token-based comparison (fast, less accurate)
-- **Syntactic**: AST-based comparison (balanced)
-- **Semantic**: Behavior-based comparison (slow, most accurate)
-- **Full Analysis**: All modes combined (recommended)
+SECRET_KEY=your-super-secret-key-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
 
 ---
 
 ## 📚 API Documentation
 
-### REST API Endpoints
+### Authentication
 
-Comprehensive API documentation is available in [API_SPECIFICATION.md](API_SPECIFICATION.md)
+#### Register
+```http
+POST /api/v1/auth/register
+Content-Type: application/json
 
-Quick reference:
-
-```bash
-# Authentication
-POST   /api/v1/auth/login
-POST   /api/v1/auth/register
-POST   /api/v1/auth/refresh
-
-# Courses
-GET    /api/v1/courses
-POST   /api/v1/courses
-GET    /api/v1/courses/{id}
-PUT    /api/v1/courses/{id}
-DELETE /api/v1/courses/{id}
-
-# Assignments
-POST   /api/v1/assignments
-GET    /api/v1/assignments/{id}
-POST   /api/v1/assignments/{id}/analyze
-
-# Submissions
-POST   /api/v1/submissions/upload
-POST   /api/v1/submissions/batch-upload
-GET    /api/v1/submissions/{id}
-
-# Analysis
-GET    /api/v1/analysis/results
-GET    /api/v1/analysis/comparison/{pair_id}
-GET    /api/v1/analysis/network/{assignment_id}
-POST   /api/v1/analysis/ai-detection
-
-# Reports
-POST   /api/v1/reports/generate
-GET    /api/v1/reports/{id}
-
-# Statistics
-GET    /api/v1/statistics/dashboard
-GET    /api/v1/statistics/assignment/{id}
+{
+  "email": "instructor@university.edu",
+  "username": "instructor",
+  "password": "SecurePassword123!",
+  "role": "instructor"
+}
 ```
 
-### WebSocket API
+#### Login
+```http
+POST /api/v1/auth/login
+Content-Type: application/json
 
-Real-time analysis updates:
+{
+  "email": "instructor@university.edu",
+  "password": "SecurePassword123!"
+}
 
-```javascript
-const ws = new WebSocket('ws://api.example.com/v1/ws/analysis/{assignment_id}?token={token}');
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  
-  if (data.type === 'progress') {
-    console.log(`Progress: ${data.data.progress}%`);
+Response:
+{
+  "access_token": "eyJhbGc....",
+  "token_type": "bearer",
+  "user": {
+    "id": "uuid",
+    "email": "instructor@university.edu",
+    "role": "instructor"
   }
-  
-  if (data.type === 'match_found') {
-    console.log(`Match found: ${data.data.similarity}%`);
-  }
-  
-  if (data.type === 'completed') {
-    console.log('Analysis complete!');
-  }
-};
+}
 ```
+
+### Courses
+
+#### List Courses
+```http
+GET /api/v1/courses
+Authorization: Bearer {token}
+```
+
+#### Create Course
+```http
+POST /api/v1/courses
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "CS 101 - Introduction to Programming",
+  "code": "CS101",
+  "semester": "Fall 2024"
+}
+```
+
+### Assignments
+
+#### Create Assignment
+```http
+POST /api/v1/assignments
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "name": "Assignment 1: Hello World",
+  "course_id": "course-uuid",
+  "due_date": "2024-02-15T23:59:59Z",
+  "settings": {
+    "similarity_threshold": 0.7,
+    "enable_ai_detection": true
+  },
+  "status": "active"
+}
+```
+
+#### Start Analysis
+```http
+POST /api/v1/assignments/{assignment_id}/start-analysis
+Authorization: Bearer {token}
+
+Response:
+{
+  "message": "Analysis started",
+  "assignment_id": "uuid",
+  "submission_count": 45,
+  "comparison_pairs_created": 990
+}
+```
+
+### Submissions
+
+#### Upload Submissions
+```http
+POST /api/v1/submissions/upload
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+assignment_id: uuid
+student_identifier: student123
+files: [File, File, ...]
+
+Response:
+{
+  "submission_id": "uuid",
+  "files_uploaded": 3,
+  "files": [...]
+}
+```
+
+#### List Submissions
+```http
+GET /api/v1/submissions?assignment_id={uuid}
+Authorization: Bearer {token}
+```
+
+### Comparisons
+
+#### Get High-Risk Comparisons
+```http
+GET /api/v1/comparisons/assignment/{assignment_id}/high-risk?threshold=0.7
+Authorization: Bearer {token}
+
+Response:
+[
+  {
+    "id": "uuid",
+    "assignment_id": "uuid",
+    "submission_a_id": "uuid",
+    "submission_b_id": "uuid",
+    "similarity_score": 0.95,
+    "status": "completed",
+    "submission_a": {...},
+    "submission_b": {...}
+  }
+]
+```
+
+### Dashboard
+
+#### Get Statistics
+```http
+GET /api/v1/dashboard/stats
+Authorization: Bearer {token}
+
+Response:
+{
+  "total_assignments": 12,
+  "total_submissions": 540,
+  "pending_reviews": 23,
+  "high_risk_cases": 8,
+  "recent_activity": [...]
+}
+```
+
+For complete API documentation, visit: `http://localhost:8000/api/v1/docs` (Swagger UI)
 
 ---
 
-## 💻 Development
+## 🔧 Development
 
 ### Project Structure
 
 ```
 code-guard-nexus/
-├── src/
+├── src/                      # Frontend source
 │   ├── components/          # React components
-│   │   ├── comparison/     # Code comparison views
-│   │   ├── dashboard/      # Dashboard components
-│   │   ├── hero/           # Landing page hero
-│   │   ├── landing/        # Landing page sections
-│   │   ├── layout/         # Layout components
 │   │   ├── ui/             # shadcn/ui components
-│   │   └── upload/         # Upload components
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility functions
+│   │   ├── dashboard/      # Dashboard components
+│   │   ├── comparison/     # Code comparison
+│   │   └── upload/         # File upload
 │   ├── pages/              # Page components
-│   │   ├── Landing.tsx
-│   │   ├── Login.tsx
-│   │   ├── Dashboard.tsx
-│   │   ├── Courses.tsx
-│   │   ├── Assignments.tsx
-│   │   └── AssignmentResults.tsx
-│   ├── App.tsx             # Main app component
-│   ├── main.tsx            # Entry point
-│   └── index.css           # Global styles
-├── public/                 # Static assets
-├── API_SPECIFICATION.md    # Backend API specification
-├── package.json            # Dependencies
-├── tsconfig.json           # TypeScript config
-├── vite.config.ts          # Vite config
-├── tailwind.config.ts      # Tailwind config
-└── README.md              # This file
+│   ├── lib/                # Utilities & services
+│   │   ├── supabase.ts    # Supabase client
+│   │   ├── auth.ts        # Auth service
+│   │   ├── api.ts         # API client
+│   │   └── utils.ts       # Helpers
+│   ├── contexts/           # React contexts
+│   ├── hooks/              # Custom hooks
+│   └── types/              # TypeScript types
+├── backend/                 # Backend source
+│   ├── app/
+│   │   ├── api/            # API endpoints
+│   │   │   ├── auth.py
+│   │   │   ├── courses.py
+│   │   │   ├── assignments.py
+│   │   │   ├── submissions.py
+│   │   │   ├── comparisons.py
+│   │   │   └── dashboard.py
+│   │   ├── core/           # Core configuration
+│   │   │   ├── config.py
+│   │   │   ├── database.py
+│   │   │   └── security.py
+│   │   ├── models/         # Data models
+│   │   ├── schemas/        # Pydantic schemas
+│   │   ├── services/       # Business logic
+│   │   └── main.py         # App entry point
+│   ├── requirements.txt
+│   └── .env
+├── public/                  # Static assets
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
 ```
 
-### Code Style
-
-We use ESLint and Prettier for code formatting:
+### Running Tests
 
 ```bash
-# Run linter
-bun run lint
-# or
+# Frontend tests
+npm test
+
+# Backend tests
+cd backend
+pytest
+```
+
+### Code Quality
+
+```bash
+# Frontend linting
 npm run lint
 
-# Fix linting issues
-bun run lint:fix
-```
-
-### Building for Production
-
-```bash
-# Create production build
-bun run build
-# or
-npm run build
-
-# Preview production build
-bun run preview
-# or
-npm run preview
+# Backend linting
+cd backend
+flake8 app/
+black app/
+mypy app/
 ```
 
 ---
 
-## 🚢 Deployment
+## 🚀 Deployment
 
-### Frontend Deployment
+### Frontend Deployment (Vercel)
 
-#### Vercel (Recommended)
 ```bash
 # Install Vercel CLI
 npm i -g vercel
 
 # Deploy
+vercel
+
+# Production deployment
 vercel --prod
 ```
 
-#### Netlify
-```bash
-# Build command: npm run build
-# Publish directory: dist
-```
-
-#### Docker
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]
-```
-
-### Backend Deployment
-
-#### Kubernetes
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: codeguard-api
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: codeguard-api
-  template:
-    metadata:
-      labels:
-        app: codeguard-api
-    spec:
-      containers:
-      - name: api
-        image: codeguard/api:latest
-        ports:
-        - containerPort: 8000
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: db-secrets
-              key: url
-```
-
-#### Docker Compose
-```yaml
-version: '3.8'
-services:
-  api:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:pass@db:5432/codeguard
-    depends_on:
-      - db
-      - redis
-  
-  db:
-    image: postgres:15
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-  
-  redis:
-    image: redis:7-alpine
-  
-  worker:
-    build: ./backend
-    command: celery -A app.celery_app worker -l info
-    depends_on:
-      - rabbitmq
-  
-  rabbitmq:
-    image: rabbitmq:3-management
-```
-
----
-
-## 🧪 Testing
-
-### Frontend Tests
+### Backend Deployment (Railway/Render)
 
 ```bash
-# Run unit tests
-bun test
-# or
-npm test
+# Using Docker
+docker build -t codeguard-api ./backend
+docker run -p 8000:8000 codeguard-api
 
-# Run with coverage
-bun test --coverage
+# Or using Railway
+railway login
+railway init
+railway up
 ```
 
-### Backend Tests
+### Database (Supabase)
 
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=html
-
-# Run specific test file
-pytest tests/test_analysis.py
-
-# Run specific test
-pytest tests/test_analysis.py::test_similarity_detection
-```
-
-### E2E Tests
-
-```bash
-# Install Playwright
-npm install -D @playwright/test
-
-# Run E2E tests
-npx playwright test
-
-# Run with UI mode
-npx playwright test --ui
-```
-
----
-
-## 📊 Performance
-
-### Benchmarks
-
-| Operation | Time | Throughput |
-|-----------|------|------------|
-| File upload (50 files) | 2.3s | 21.7 files/s |
-| Lexical analysis (1000 LOC) | 0.8s | 1250 LOC/s |
-| Syntactic analysis (1000 LOC) | 1.5s | 666 LOC/s |
-| Semantic analysis (1000 LOC) | 3.2s | 312 LOC/s |
-| AI detection (1000 LOC) | 2.1s | 476 LOC/s |
-| Full analysis (45 submissions) | 3.5min | 12.8 files/min |
-| Report generation (PDF) | 8s | - |
-
-### Optimization Tips
-
-1. **Batch Processing**: Upload submissions in batches of 50-100
-2. **Sensitivity**: Lower sensitivity = faster analysis
-3. **Language Specific**: Disable unused language parsers
-4. **Caching**: Results are cached for 24 hours
-5. **Parallel Processing**: Enable multi-threaded analysis
+Supabase provides managed PostgreSQL hosting with automatic backups, scaling, and monitoring.
 
 ---
 
 ## 🔒 Security
 
+### Authentication Flow
+
+1. User registers/logs in via Supabase Auth
+2. Frontend receives JWT access token
+3. Token stored in memory (not localStorage for security)
+4. Token sent with all API requests via Authorization header
+5. Backend verifies token with Supabase
+6. Row Level Security enforces data access rules
+
+### Row Level Security Policies
+
+```sql
+-- Users can only view their own data
+CREATE POLICY "Users can view own data"
+ON users FOR SELECT
+USING (auth.uid() = id);
+
+-- Instructors can only manage their own courses
+CREATE POLICY "Instructors manage own courses"
+ON courses FOR ALL
+USING (auth.uid() = instructor_id);
+
+-- Students can only view assignments from their courses
+CREATE POLICY "Students view course assignments"
+ON assignments FOR SELECT
+USING (
+  course_id IN (
+    SELECT course_id FROM enrollments
+    WHERE user_id = auth.uid()
+  )
+);
+```
+
 ### Best Practices
 
-- All data encrypted at rest (AES-256)
-- TLS 1.3 for data in transit
-- JWT tokens with RS256 signing
-- Rate limiting (100 req/hour free tier)
-- File upload virus scanning
-- Sandboxed code execution
-- SQL injection prevention
-- XSS protection
-- CSRF tokens
-- CORS configuration
-
-### Compliance
-
-- ✅ SOC 2 Type II
-- ✅ GDPR Compliant
-- ✅ FERPA Compliant
-- ✅ CCPA Compliant
-
-### Security Reporting
-
-Found a security issue? Please email security@codeguard-nexus.com
+- ✅ Environment variables for secrets
+- ✅ JWT token expiration (30 minutes)
+- ✅ HTTPS only in production
+- ✅ CORS configured for specific origins
+- ✅ Rate limiting on API endpoints
+- ✅ Input validation with Pydantic
+- ✅ SQL injection prevention via ORM
+- ✅ XSS protection in React
+- ✅ CSRF tokens for state-changing operations
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from the community!
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
 
-### Development Setup
+### Development Workflow
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Run tests: `bun test`
-5. Commit: `git commit -m 'Add amazing feature'`
-6. Push: `git push origin feature/amazing-feature`
-7. Open a Pull Request
-
-### Contribution Guidelines
-
-- Follow the existing code style
-- Write tests for new features
-- Update documentation
-- Keep commits atomic and well-described
-- Ensure all tests pass before submitting PR
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-## 📝 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -1095,64 +881,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built with [React](https://reactjs.org/) and [FastAPI](https://fastapi.tiangolo.com/)
+- Built with [FastAPI](https://fastapi.tiangolo.com/)
+- Powered by [Supabase](https://supabase.com/)
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
 - Icons from [Lucide](https://lucide.dev/)
-- Inspired by academic integrity tools and modern plagiarism detection research
-
----
-
-## 📞 Support
-
-### Documentation
-- [API Reference](API_SPECIFICATION.md)
-- [User Guide](docs/user-guide.md)
-- [Admin Guide](docs/admin-guide.md)
-
-### Community
-- [Discord Server](https://discord.gg/codeguard)
-- [GitHub Discussions](https://github.com/your-org/code-guard-nexus/discussions)
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/codeguard-nexus)
-
-### Contact
-- Email: support@codeguard-nexus.com
-- Twitter: [@CodeGuardNexus](https://twitter.com/CodeGuardNexus)
-- Website: [codeguard-nexus.com](https://codeguard-nexus.com)
-
----
-
-## 🗺️ Roadmap
-
-### Q1 2026
-- [ ] Real-time collaboration detection
-- [ ] Mobile app (iOS/Android)
-- [ ] VS Code extension
-- [ ] Jupyter Notebook support
-
-### Q2 2026
-- [ ] Multi-language support (10+ languages)
-- [ ] Advanced ML models for AI detection
-- [ ] Integration with LMS (Canvas, Blackboard, Moodle)
-- [ ] Custom report templates
-
-### Q3 2026
-- [ ] Video tutorial generation
-- [ ] Automated grading assistance
-- [ ] Student dashboard portal
-- [ ] API marketplace for extensions
-
-### Q4 2026
-- [ ] Enterprise SSO integration
-- [ ] Advanced analytics & predictions
-- [ ] Blockchain-based proof of originality
-- [ ] AI teaching assistant
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by educators, for educators**
+**Made with ❤️ for Educators**
 
-[⬆ Back to Top](#codeguard-nexus-)
+[Report Bug](https://github.com/yourusername/code-guard-nexus/issues) • [Request Feature](https://github.com/yourusername/code-guard-nexus/issues)
 
 </div>
