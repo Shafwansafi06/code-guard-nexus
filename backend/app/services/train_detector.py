@@ -528,16 +528,45 @@ class CodeDetectorTrainer:
 
 def main():
     """Main training function"""
+    # Optimized configuration for RTX 5000 (16GB VRAM)
     config = TrainingConfig(
         model_name="microsoft/codebert-base",
-        batch_size=32,
+        batch_size=48,  # Increased for RTX 5000's 16GB VRAM
         num_epochs=10,
         learning_rate=2e-5,
+        max_length=512,
+        embedding_dim=256,
+        output_dir="./models/code_detector",
+        warmup_steps=500,
+        gradient_clip=1.0,
+        lambda_contrastive=0.5,
+        lambda_classification=0.5,
+        temperature=0.07,
         use_wandb=False  # Set to True if you have wandb setup
     )
     
+    print("\n" + "="*60)
+    print("CodeGuard Nexus - ML Model Training")
+    print("="*60)
+    print(f"Configuration:")
+    print(f"  Model: {config.model_name}")
+    print(f"  Batch Size: {config.batch_size}")
+    print(f"  Epochs: {config.num_epochs}")
+    print(f"  Learning Rate: {config.learning_rate}")
+    print(f"  Device: {'CUDA (GPU)' if torch.cuda.is_available() else 'CPU'}")
+    if torch.cuda.is_available():
+        print(f"  GPU: {torch.cuda.get_device_name(0)}")
+        print(f"  VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+    print(f"  Output: {config.output_dir}")
+    print("="*60 + "\n")
+    
     trainer = CodeDetectorTrainer(config)
     trainer.train()
+    
+    print("\n" + "="*60)
+    print("✓ Training Complete!")
+    print(f"Model saved to: {config.output_dir}")
+    print("="*60)
 
 
 if __name__ == "__main__":
