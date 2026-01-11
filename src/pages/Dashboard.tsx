@@ -14,15 +14,20 @@ import {
   Download,
   Search,
   Bell,
-  MoreVertical
+  MoreVertical,
+  Upload,
+  Flag,
+  Eye,
+  FileDown,
+  Zap
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 const quickStats = [
-  { icon: FileText, label: 'Total Scans', value: '45', change: '+12%', positive: true },
-  { icon: AlertTriangle, label: 'High Risk', value: '8', change: '-1.9%', positive: true },
-  { icon: AlertCircle, label: 'Medium Risk', value: '12', change: '+2.1%', positive: false },
-  { icon: Clock, label: 'Avg Time', value: '2.4h', change: '-15%', positive: true },
+  { icon: FileText, label: 'Submissions Analyzed', value: '1,247', change: '+12%', positive: true },
+  { icon: AlertTriangle, label: 'Plagiarism Cases', value: '23', change: '-8%', positive: true },
+  { icon: AlertCircle, label: 'AI-Generated Code', value: '45', change: '+15%', positive: false },
+  { icon: Clock, label: 'Time Saved', value: '127h', change: '+22%', positive: true },
 ];
 
 const recentActivity = [
@@ -74,27 +79,92 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold">Detailed Analytics</h1>
+            <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
-                placeholder="Search anything" 
+                placeholder="Search assignments" 
                 className="pl-9 w-64 bg-muted/50 border-border/50 rounded-full"
               />
             </div>
-            <Button variant="default" className="gap-2 rounded-lg">
-              <Download className="w-4 h-4" />
-              Get Report
-            </Button>
+            <Link to="/assignments/new">
+              <Button variant="default" className="gap-2 rounded-lg">
+                <Upload className="w-4 h-4" />
+                New Scan
+              </Button>
+            </Link>
             <Button variant="ghost" size="icon" className="rounded-lg">
               <Bell className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">Statistics / Detailed analytic</p>
+        <p className="text-sm text-muted-foreground">Academic Integrity Monitoring</p>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickStats.map((stat, index) => (
+            <div key={index} className="p-4 rounded-xl bg-card border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <stat.icon className="w-5 h-5 text-primary" />
+                <span className={`text-xs ${stat.positive ? 'text-success' : 'text-warning'}`}>
+                  {stat.change}
+                </span>
+              </div>
+              <p className="text-2xl font-bold mb-1">{stat.value}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Actions for Professors */}
+        <div className="grid md:grid-cols-4 gap-4">
+          <Link to="/assignments/new" className="p-4 rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 hover:border-primary/50 transition-all group">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                <Upload className="w-5 h-5 text-primary" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h3 className="font-semibold mb-1">Upload & Scan</h3>
+            <p className="text-xs text-muted-foreground">Batch analyze new submissions</p>
+          </Link>
+
+          <Link to="/assignments?filter=high-risk" className="p-4 rounded-xl bg-card border border-border/50 hover:border-destructive/50 transition-all group">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 transition-colors">
+                <Flag className="w-5 h-5 text-destructive" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h3 className="font-semibold mb-1">Review Flagged</h3>
+            <p className="text-xs text-muted-foreground">23 cases need attention</p>
+          </Link>
+
+          <button className="p-4 rounded-xl bg-card border border-border/50 hover:border-success/50 transition-all group text-left">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-success/10 group-hover:bg-success/20 transition-colors">
+                <FileDown className="w-5 h-5 text-success" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-success opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h3 className="font-semibold mb-1">Export Reports</h3>
+            <p className="text-xs text-muted-foreground">Generate PDF evidence</p>
+          </button>
+
+          <Link to="/history" className="p-4 rounded-xl bg-card border border-border/50 hover:border-accent/50 transition-all group">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                <Eye className="w-5 h-5 text-accent" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <h3 className="font-semibold mb-1">View History</h3>
+            <p className="text-xs text-muted-foreground">Past scans & trends</p>
+          </Link>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -102,9 +172,9 @@ export default function Dashboard() {
           <div className="md:col-span-2 p-6 rounded-xl bg-card border border-border/50">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Scans</p>
+                <p className="text-sm text-muted-foreground mb-1">Submissions This Month</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">Monthly</span>
+                  <span className="text-sm font-medium">Monthly</span>
                   <span className="text-sm text-muted-foreground">Weekly</span>
                 </div>
               </div>
@@ -116,7 +186,7 @@ export default function Dashboard() {
               <div className="p-2 rounded-lg bg-success/10">
                 <TrendingUp className="w-5 h-5 text-success" />
               </div>
-              <span className="text-4xl font-bold">824,444.68</span>
+              <span className="text-4xl font-bold">1,247</span>
               <span className="text-sm text-success">+1.9%</span>
             </div>
             {/* Chart placeholder */}
@@ -143,8 +213,8 @@ export default function Dashboard() {
                 <AlertTriangle className="w-4 h-4 text-destructive" />
               </div>
             </div>
-            <p className="text-3xl font-bold mb-1">$ 45,673</p>
-            <p className="text-sm text-destructive">-1.9% from last week</p>
+            <p className="text-3xl font-bold mb-1">23</p>
+            <p className="text-sm text-success">-8% from last week</p>
             {/* Mini chart */}
             <div className="mt-4 flex items-end justify-between gap-1 h-16">
               {[30, 50, 40, 60, 45, 55, 70, 50].map((h, i) => (
@@ -160,8 +230,8 @@ export default function Dashboard() {
                 <TrendingUp className="w-4 h-4 text-success" />
               </div>
             </div>
-            <p className="text-3xl font-bold mb-1">$ 45,673</p>
-            <p className="text-sm text-success">-1.9% from last week</p>
+            <p className="text-3xl font-bold mb-1">1,089</p>
+            <p className="text-sm text-success">+12% from last week</p>
             {/* Mini chart */}
             <div className="mt-4 flex items-end justify-between gap-1 h-16">
               {[50, 60, 55, 70, 65, 80, 75, 85].map((h, i) => (
