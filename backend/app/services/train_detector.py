@@ -36,12 +36,13 @@ class TrainingConfig:
     max_length: int = 512
     embedding_dim: int = 768
     
-    # Training settings
-    batch_size: int = 32
+    # Training settings - A100 Optimized
+    batch_size: int = 128  # A100 can handle much larger batches
     num_epochs: int = 10
-    learning_rate: float = 2e-5
+    learning_rate: float = 3e-5  # Slightly higher for larger batches
     warmup_steps: int = 1000
     weight_decay: float = 0.01
+    gradient_accumulation_steps: int = 2  # Effective batch size = 256
     
     # Loss weights
     lambda_contrastive: float = 0.5
@@ -51,9 +52,14 @@ class TrainingConfig:
     # Freezing strategy
     freeze_epochs: int = 2
     
-    # Hardware
+    # Hardware - A100 Optimized
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
-    num_workers: int = 4
+    num_workers: int = 8  # A100 systems have more CPU cores
+    pin_memory: bool = True
+    prefetch_factor: int = 2
+    persistent_workers: bool = True
+    mixed_precision: bool = True  # Enable automatic mixed precision
+    compile_model: bool = True  # PyTorch 2.0+ compilation
     
     # Paths
     output_dir: str = "./models/code_detector"
@@ -61,7 +67,8 @@ class TrainingConfig:
     
     # Logging
     use_wandb: bool = False
-    log_interval: int = 100
+    log_interval: int = 50
+    save_steps: int = 500
 
 
 class CodePairDataset(Dataset):
@@ -236,8 +243,8 @@ class DatasetLoader:
             for item in ds[split]:
                 examples.append({
                     'code': item['code'],
-                    'language': item['language'],
-                    'task': item['title'],
+                    'language': item['language_name'],
+                    'task': item['task_name'],
                     'label': 0,  # Human-written code
                     'source': 'rosetta_code'
                 })
@@ -309,9 +316,17 @@ class CodeDetectorTrainer:
             embedding_dim=config.embedding_dim
         ).to(self.device)
         
+        # Enable PyTorch 2.0 compilation for faster execution on A100
+        if config.compile_model and hasattr(torch, 'compile'):
+            logger.info("Compiling model with torch.compile() for A100 optimization...")
+            self.model = torch.compile(self.model, mode='reduce-overhead')
+        
         # Loss functions
         self.contrastive_loss = InfoNCELoss(temperature=config.temperature)
         self.classification_loss = nn.CrossEntropyLoss()
+        
+        # Mixed precision scaler
+        self.scaler = torch.cuda.amp.GradScaler() if config.mixed_precision else None
         
         # Initialize wandb if enabled
         if config.use_wandb:
@@ -343,70 +358,106 @@ class CodeDetectorTrainer:
         self.val_dataset = CodePairDataset(val_examples, self.tokenizer, self.config.max_length)
         self.test_dataset = CodePairDataset(test_examples, self.tokenizer, self.config.max_length)
         
-        # Create dataloaders
+        # Create dataloaders - A100 Optimized
         self.train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
-            num_workers=self.config.num_workers
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory,
+            prefetch_factor=self.config.prefetch_factor,
+            persistent_workers=self.config.persistent_workers
         )
         self.val_loader = DataLoader(
             self.val_dataset,
             batch_size=self.config.batch_size,
-            num_workers=self.config.num_workers
+            num_workers=self.config.num_workers,
+            pin_memory=self.config.pin_memory,
+            prefetch_factor=self.config.prefetch_factor,
+            persistent_workers=self.config.persistent_workers
         )
         
         logger.info(f"Train: {len(train_examples)}, Val: {len(val_examples)}, Test: {len(test_examples)}")
     
     def train_epoch(self, epoch: int, optimizer, scheduler):
-        """Train for one epoch"""
+        """Train for one epoch with mixed precision and gradient accumulation"""
         self.model.train()
         total_loss = 0
         contrastive_loss_total = 0
         classification_loss_total = 0
         
         progress_bar = tqdm(self.train_loader, desc=f"Epoch {epoch}")
+        optimizer.zero_grad()
         
         for batch_idx, batch in enumerate(progress_bar):
-            input_ids = batch['input_ids'].to(self.device)
-            attention_mask = batch['attention_mask'].to(self.device)
-            labels = batch['label'].to(self.device)
+            input_ids = batch['input_ids'].to(self.device, non_blocking=True)
+            attention_mask = batch['attention_mask'].to(self.device, non_blocking=True)
+            labels = batch['label'].to(self.device, non_blocking=True)
             
-            # Forward pass
-            logits, embeddings = self.model(input_ids, attention_mask)
+            # Mixed precision training
+            if self.config.mixed_precision:
+                with torch.cuda.amp.autocast():
+                    # Forward pass
+                    logits, embeddings = self.model(input_ids, attention_mask)
+                    
+                    # Compute losses
+                    cls_loss = self.classification_loss(logits, labels)
+                    cont_loss = self.contrastive_loss(embeddings, labels)
+                    
+                    # Combined loss
+                    loss = (self.config.lambda_classification * cls_loss + 
+                           self.config.lambda_contrastive * cont_loss)
+                    
+                    # Scale loss for gradient accumulation
+                    loss = loss / self.config.gradient_accumulation_steps
+                
+                # Backward pass with gradient scaling
+                self.scaler.scale(loss).backward()
+                
+                # Update weights after accumulation steps
+                if (batch_idx + 1) % self.config.gradient_accumulation_steps == 0:
+                    self.scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                    self.scaler.step(optimizer)
+                    self.scaler.update()
+                    optimizer.zero_grad()
+                    scheduler.step()
+            else:
+                # Standard training without mixed precision
+                logits, embeddings = self.model(input_ids, attention_mask)
+                cls_loss = self.classification_loss(logits, labels)
+                cont_loss = self.contrastive_loss(embeddings, labels)
+                loss = (self.config.lambda_classification * cls_loss + 
+                       self.config.lambda_contrastive * cont_loss)
+                loss = loss / self.config.gradient_accumulation_steps
+                
+                loss.backward()
+                
+                if (batch_idx + 1) % self.config.gradient_accumulation_steps == 0:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                    optimizer.step()
+                    optimizer.zero_grad()
+                    scheduler.step()
             
-            # Compute losses
-            cls_loss = self.classification_loss(logits, labels)
-            cont_loss = self.contrastive_loss(embeddings, labels)
-            
-            # Combined loss
-            loss = (self.config.lambda_classification * cls_loss + 
-                   self.config.lambda_contrastive * cont_loss)
-            
-            # Backward pass
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-            optimizer.step()
-            scheduler.step()
-            
-            # Track metrics
-            total_loss += loss.item()
+            # Track metrics (unscaled)
+            actual_loss = loss.item() * self.config.gradient_accumulation_steps
+            total_loss += actual_loss
             contrastive_loss_total += cont_loss.item()
             classification_loss_total += cls_loss.item()
             
             if batch_idx % self.config.log_interval == 0:
                 progress_bar.set_postfix({
-                    'loss': f'{loss.item():.4f}',
+                    'loss': f'{actual_loss:.4f}',
                     'cls': f'{cls_loss.item():.4f}',
-                    'cont': f'{cont_loss.item():.4f}'
+                    'cont': f'{cont_loss.item():.4f}',
+                    'lr': f'{scheduler.get_last_lr()[0]:.2e}'
                 })
         
         avg_loss = total_loss / len(self.train_loader)
         return avg_loss, classification_loss_total / len(self.train_loader), contrastive_loss_total / len(self.train_loader)
     
     def evaluate(self):
-        """Evaluate model"""
+        """Evaluate model with mixed precision"""
         self.model.eval()
         all_labels = []
         all_preds = []
@@ -414,11 +465,17 @@ class CodeDetectorTrainer:
         
         with torch.no_grad():
             for batch in tqdm(self.val_loader, desc="Evaluating"):
-                input_ids = batch['input_ids'].to(self.device)
-                attention_mask = batch['attention_mask'].to(self.device)
+                input_ids = batch['input_ids'].to(self.device, non_blocking=True)
+                attention_mask = batch['attention_mask'].to(self.device, non_blocking=True)
                 labels = batch['label']
                 
-                logits, embeddings = self.model(input_ids, attention_mask)
+                # Use mixed precision for evaluation too
+                if self.config.mixed_precision:
+                    with torch.cuda.amp.autocast():
+                        logits, embeddings = self.model(input_ids, attention_mask)
+                else:
+                    logits, embeddings = self.model(input_ids, attention_mask)
+                
                 preds = torch.softmax(logits, dim=1)[:, 1]  # Probability of AI-generated
                 
                 all_labels.extend(labels.cpu().numpy())
@@ -528,37 +585,49 @@ class CodeDetectorTrainer:
 
 def main():
     """Main training function"""
-    # Optimized configuration for RTX 5000 (16GB VRAM)
+    # GPU-optimized configuration for NVIDIA A100 (40GB VRAM)
     config = TrainingConfig(
         model_name="microsoft/codebert-base",
-        batch_size=48,  # Increased for RTX 5000's 16GB VRAM
+        batch_size=128,  # Optimized for A100's 40GB VRAM
         num_epochs=10,
-        learning_rate=2e-5,
+        learning_rate=3e-5,
         max_length=512,
-        embedding_dim=256,
+        embedding_dim=768,
+        gradient_accumulation_steps=2,  # Effective batch size: 256
         output_dir="./models/code_detector",
-        warmup_steps=500,
-        gradient_clip=1.0,
+        warmup_steps=1000,
         lambda_contrastive=0.5,
         lambda_classification=0.5,
         temperature=0.07,
-        use_wandb=False  # Set to True if you have wandb setup
+        use_wandb=False,
+        num_workers=8,
+        pin_memory=True,
+        prefetch_factor=2,
+        persistent_workers=True,
+        mixed_precision=True,
+        compile_model=True
     )
     
-    print("\n" + "="*60)
-    print("CodeGuard Nexus - ML Model Training")
-    print("="*60)
+    print("\n" + "="*70)
+    print("CodeGuard Nexus - ML Model Training (A100 Optimized)")
+    print("="*70)
     print(f"Configuration:")
     print(f"  Model: {config.model_name}")
-    print(f"  Batch Size: {config.batch_size}")
+    print(f"  Batch Size: {config.batch_size} x {config.gradient_accumulation_steps} accumulation")
+    print(f"  Effective Batch Size: {config.batch_size * config.gradient_accumulation_steps}")
     print(f"  Epochs: {config.num_epochs}")
     print(f"  Learning Rate: {config.learning_rate}")
+    print(f"  Mixed Precision: {config.mixed_precision}")
+    print(f"  Model Compilation: {config.compile_model}")
     print(f"  Device: {'CUDA (GPU)' if torch.cuda.is_available() else 'CPU'}")
     if torch.cuda.is_available():
         print(f"  GPU: {torch.cuda.get_device_name(0)}")
         print(f"  VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+        print(f"  CUDA Capability: {torch.cuda.get_device_capability(0)}")
+        print(f"  Tensor Cores: Available" if torch.cuda.get_device_capability(0)[0] >= 7 else "Not Available")
+    print(f"  Workers: {config.num_workers}")
     print(f"  Output: {config.output_dir}")
-    print("="*60 + "\n")
+    print("="*70 + "\n")
     
     trainer = CodeDetectorTrainer(config)
     trainer.train()
