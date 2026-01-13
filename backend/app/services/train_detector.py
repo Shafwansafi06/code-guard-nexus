@@ -264,8 +264,41 @@ class DatasetLoader:
         # ds = load_dataset("your/multiaigcd-dataset")
         
         examples = []
-        # For now, create synthetic examples
-        # In production, load from actual AI-generated code datasets
+        
+        # Create synthetic AI-generated examples for training
+        # These simulate AI-generated code patterns
+        logger.info("Generating synthetic AI-generated code examples...")
+        
+        ai_code_templates = [
+            # Pattern 1: Very generic variable names
+            "def function1(x, y):\n    result = x + y\n    return result",
+            "def process_data(data):\n    output = []\n    for item in data:\n        output.append(item)\n    return output",
+            
+            # Pattern 2: Excessive comments
+            "# This function adds two numbers\ndef add(a, b):\n    # Add a and b\n    result = a + b\n    # Return the result\n    return result",
+            
+            # Pattern 3: Over-engineered simple tasks
+            "class Calculator:\n    def __init__(self):\n        self.result = 0\n    def add(self, a, b):\n        self.result = a + b\n        return self.result",
+            
+            # Pattern 4: Repetitive code
+            "def process(x):\n    if x == 1: return 'one'\n    if x == 2: return 'two'\n    if x == 3: return 'three'\n    if x == 4: return 'four'",
+        ]
+        
+        languages = ['python', 'javascript', 'java', 'cpp']
+        tasks = ['data_processing', 'algorithm', 'utility', 'helper', 'calculator']
+        
+        # Generate 20000 synthetic AI examples to balance the dataset
+        for i in range(20000):
+            template = np.random.choice(ai_code_templates)
+            examples.append({
+                'code': template,
+                'language': np.random.choice(languages),
+                'task': np.random.choice(tasks),
+                'label': 1,  # AI-generated code
+                'source': 'synthetic_ai'
+            })
+        
+        logger.info(f"Generated {len(examples)} synthetic AI-generated code examples")
         
         return examples
     
@@ -339,6 +372,21 @@ class CodeDetectorTrainer:
         # Load datasets
         rosetta_examples = DatasetLoader.load_rosetta_code()
         ai_examples = DatasetLoader.load_ai_generated_code()
+        
+        # Validate we have examples from both classes
+        human_count = sum(1 for ex in rosetta_examples if ex['label'] == 0)
+        ai_count = sum(1 for ex in ai_examples if ex['label'] == 1)
+        
+        logger.info(f"Dataset composition: {human_count} human-written, {ai_count} AI-generated")
+        
+        if ai_count == 0:
+            logger.error("❌ No AI-generated examples found!")
+            logger.error("The model needs both human and AI examples to train properly.")
+            raise ValueError("Dataset must contain both human and AI-generated code examples")
+        
+        if human_count == 0:
+            logger.error("❌ No human-written examples found!")
+            raise ValueError("Dataset must contain both human and AI-generated code examples")
         
         # Combine and split
         all_examples = rosetta_examples + ai_examples
@@ -487,14 +535,38 @@ class CodeDetectorTrainer:
         all_preds = np.array(all_preds)
         all_embeddings = np.vstack(all_embeddings)
         
+        # Check if we have both classes
+        unique_labels = np.unique(all_labels)
+        num_classes = len(unique_labels)
+        
+        logger.info(f"Validation set has {num_classes} unique class(es): {unique_labels}")
+        
+        if num_classes < 2:
+            logger.warning("⚠️  Only one class present in validation set!")
+            logger.warning("ROC-AUC and PR-AUC cannot be computed with single class.")
+            logger.warning("Returning default scores. Please ensure dataset has both classes.")
+            return 0.5, 0.5, all_embeddings
+        
         # ROC-AUC for classification
-        roc_auc = roc_auc_score(all_labels, all_preds)
+        try:
+            roc_auc = roc_auc_score(all_labels, all_preds)
+        except ValueError as e:
+            logger.error(f"Error computing ROC-AUC: {e}")
+            roc_auc = 0.5
         
         # Precision-Recall AUC
-        precision, recall, _ = precision_recall_curve(all_labels, all_preds)
-        pr_auc = auc(recall, precision)
+        try:
+            precision, recall, _ = precision_recall_curve(all_labels, all_preds)
+            pr_auc = auc(recall, precision)
+        except ValueError as e:
+            logger.error(f"Error computing PR-AUC: {e}")
+            pr_auc = 0.5
         
-        logger.info(f"Validation ROC-AUC: {roc_auc:.4f}, PR-AUC: {pr_auc:.4f}")
+        # Calculate accuracy
+        predictions = (all_preds > 0.5).astype(int)
+        accuracy = (predictions == all_labels).mean()
+        
+        logger.info(f"Validation - Accuracy: {accuracy:.4f}, ROC-AUC: {roc_auc:.4f}, PR-AUC: {pr_auc:.4f}")
         
         return roc_auc, pr_auc, all_embeddings
     
@@ -585,31 +657,31 @@ class CodeDetectorTrainer:
 
 def main():
     """Main training function"""
-    # GPU-optimized configuration for NVIDIA A100 (40GB VRAM)
+    # GPU-optimized configuration for NVIDIA RTX 5000 (16GB VRAM)
     config = TrainingConfig(
         model_name="microsoft/codebert-base",
-        batch_size=128,  # Optimized for A100's 40GB VRAM
+        batch_size=48,  # Optimized for RTX 5000's 16GB VRAM
         num_epochs=10,
-        learning_rate=3e-5,
+        learning_rate=2e-5,
         max_length=512,
         embedding_dim=768,
-        gradient_accumulation_steps=2,  # Effective batch size: 256
+        gradient_accumulation_steps=2,  # Effective batch size: 96
         output_dir="./models/code_detector",
-        warmup_steps=1000,
+        warmup_steps=500,
         lambda_contrastive=0.5,
         lambda_classification=0.5,
         temperature=0.07,
         use_wandb=False,
-        num_workers=8,
+        num_workers=4,  # Reduced for RTX 5000 systems
         pin_memory=True,
         prefetch_factor=2,
         persistent_workers=True,
         mixed_precision=True,
-        compile_model=True
+        compile_model=False  # Disable for RTX 5000 compatibility
     )
     
     print("\n" + "="*70)
-    print("CodeGuard Nexus - ML Model Training (A100 Optimized)")
+    print("CodeGuard Nexus - ML Model Training (RTX 5000 Optimized)")
     print("="*70)
     print(f"Configuration:")
     print(f"  Model: {config.model_name}")
