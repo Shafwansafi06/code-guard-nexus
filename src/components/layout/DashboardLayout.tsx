@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   Shield,
   User,
-  Bell
+  Bell,
+  Brain
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: BookOpen, label: 'Courses', path: '/courses' },
   { icon: FileText, label: 'Assignments', path: '/assignments' },
+  { icon: Brain, label: 'ML Analysis', path: '/ml-analysis' },
   { icon: Clock, label: 'History', path: '/history' },
   { icon: Settings, label: 'Settings', path: '/settings' },
   { icon: HelpCircle, label: 'Help', path: '/help' },

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "CodeGuard Nexus API"
     DEBUG: bool = True
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000,http://localhost:8080"
     
     # JWT
     SECRET_KEY: str

@@ -2,6 +2,9 @@ import { FileText, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react'
 import { StatCard } from './StatCard';
 import { SimilarityPairCard } from './SimilarityPairCard';
 import { NetworkGraph } from './NetworkGraph';
+import { CodeEditorDialog } from './CodeEditorDialog';
+import { CodeComparisonDialog } from './CodeComparisonDialog';
+import { useState } from 'react';
 
 const mockPairs = [
   {
@@ -29,11 +32,78 @@ const mockPairs = [
     fileB: 'student_h.py',
     similarity: 68,
     matches: ['Import statements', 'Class structure'],
-    aiPattern: 45,
   },
 ];
 
+const mockCode: Record<string, string> = {
+  'student_a.py': `def calculate_average(scores):
+    # This function calculates the mean of a list of numbers
+    total = 0
+    for s in scores:
+        total += s
+    
+    avg = total / len(scores)
+    return avg
+
+def process_data(data):
+    # Main processing loop
+    results = []
+    for item in data:
+        res = calculate_average(item['scores'])
+        results.append(res)
+    return results`,
+  'student_b.py': `def get_mean_value(values):
+    # This function calculates the mean of a list of numbers
+    sum_val = 0
+    for v in values:
+        sum_val += v
+    
+    mean = sum_val / len(values)
+    return mean
+
+def handle_items(items):
+    # Main processing loop
+    output = []
+    for x in items:
+        val = get_mean_value(x['scores'])
+        output.append(val)
+    return output`,
+  'student_c.java': `public class DataProcessor {
+    public double calculateMean(List<Double> numbers) {
+        double sum = 0;
+        for (Double n : numbers) {
+            sum += n;
+        }
+        return sum / numbers.size();
+    }
+}`,
+  'student_d.java': `public class Analyzer {
+    public double getAverage(List<Double> vals) {
+        double total = 0;
+        for (Double v : vals) {
+            total += v;
+        }
+        return total / vals.size();
+    }
+}`
+};
+
 export function Dashboard() {
+  const [previewFile, setPreviewFile] = useState<string | null>(null);
+  const [comparePair, setComparePair] = useState<{ fileA: string, fileB: string, similarity: number } | null>(null);
+
+  const handlePreview = (filename: string) => {
+    setPreviewFile(filename);
+  };
+
+  const handleCompare = (pair: typeof mockPairs[0]) => {
+    setComparePair({
+      fileA: pair.fileA,
+      fileB: pair.fileB,
+      similarity: pair.similarity
+    });
+  };
+
   return (
     <section className="py-16 bg-card">
       <div className="container mx-auto px-4">
@@ -103,18 +173,39 @@ export function Dashboard() {
                 <option>File Name</option>
               </select>
             </div>
-            
+
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
               {mockPairs.map((pair, index) => (
                 <SimilarityPairCard
                   key={index}
                   {...pair}
                   index={index}
+                  onPreview={handlePreview}
+                  onCompare={() => handleCompare(pair)}
                 />
               ))}
             </div>
           </div>
         </div>
+
+        {/* Dialogs */}
+        <CodeEditorDialog
+          open={!!previewFile}
+          onOpenChange={(open) => !open && setPreviewFile(null)}
+          filename={previewFile || ''}
+          code={previewFile ? (mockCode[previewFile] || '# No code available for this mock') : ''}
+          language={previewFile?.endsWith('.py') ? 'python' : previewFile?.endsWith('.java') ? 'java' : 'cpp'}
+        />
+
+        <CodeComparisonDialog
+          open={!!comparePair}
+          onOpenChange={(open) => !open && setComparePair(null)}
+          fileA={comparePair?.fileA || ''}
+          fileB={comparePair?.fileB || ''}
+          codeA={comparePair ? (mockCode[comparePair.fileA] || '# Original code\ndef dummy(): pass') : ''}
+          codeB={comparePair ? (mockCode[comparePair.fileB] || '# Copied code\ndef dummy(): pass') : ''}
+          similarity={comparePair?.similarity || 0}
+        />
       </div>
     </section>
   );

@@ -16,6 +16,7 @@ import AssignmentResults from "./pages/AssignmentResults";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import MLAnalysis from "./pages/MLAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/assignments" element={<Assignments />} />
           <Route path="/assignments/new" element={<NewAssignment />} />
           <Route path="/assignments/:id/results" element={<AssignmentResults />} />
+          <Route path="/ml-analysis" element={<MLAnalysis />} />
           <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Help />} />

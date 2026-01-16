@@ -9,6 +9,8 @@ interface SimilarityPairCardProps {
   matches: string[];
   aiPattern?: number;
   index?: number;
+  onPreview?: (file: string) => void;
+  onCompare?: () => void;
 }
 
 export function SimilarityPairCard({
@@ -17,7 +19,9 @@ export function SimilarityPairCard({
   similarity,
   matches,
   aiPattern,
-  index = 0
+  index = 0,
+  onPreview,
+  onCompare
 }: SimilarityPairCardProps) {
   const getRiskLevel = () => {
     if (similarity >= 85) return 'high';
@@ -101,10 +105,20 @@ export function SimilarityPairCard({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => onPreview?.(fileA)}
+        >
           Preview
         </Button>
-        <Button variant="default" size="sm" className="flex-1">
+        <Button
+          variant="default"
+          size="sm"
+          className="flex-1"
+          onClick={onCompare}
+        >
           Compare
         </Button>
         <Button variant="ghost" size="sm">

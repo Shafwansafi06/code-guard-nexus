@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
-from app.core.database import get_supabase
+from app.core.database import get_supabase, get_supabase_admin
 from app.core.security import get_current_user, get_password_hash, create_access_token
 from app.schemas import (
     UserLogin, UserRegister, Token, UserResponse
@@ -27,7 +27,19 @@ async def register(user_data: UserRegister):
                 detail="Failed to create user"
             )
         
-        # Create user record in database
+        # Automatically confirm the user using admin client (to skip email confirmation step)
+        admin_supabase = get_supabase_admin()
+        try:
+            admin_supabase.auth.admin.update_user_by_id(
+                auth_response.user.id,
+                {"email_confirm": True}
+            )
+        except Exception:
+            # Not critical if this fails, may be already confirmed or setting disabled
+            pass
+        
+        # Create user record in database using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
         user_record = {
             "id": auth_response.user.id,
             "email": user_data.email,
@@ -38,7 +50,7 @@ async def register(user_data: UserRegister):
             "is_active": True
         }
         
-        result = supabase.table("users").insert(user_record).execute()
+        result = admin_supabase.table("users").insert(user_record).execute()
         
         return {
             "message": "User registered successfully",
@@ -46,6 +58,7 @@ async def register(user_data: UserRegister):
         }
         
     except Exception as e:
+        print(f"DEBUG REGISTER: EXCEPTION: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Registration failed: {str(e)}"
@@ -70,13 +83,14 @@ async def login(credentials: UserLogin):
                 detail="Incorrect email or password"
             )
         
-        # Fetch user details from database
-        result = supabase.table("users").select("*").eq("id", auth_response.user.id).execute()
+        # Fetch user details from database using admin client
+        admin_supabase = get_supabase_admin()
+        result = admin_supabase.table("users").select("*").eq("id", auth_response.user.id).execute()
         
         if not result.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                detail="User record not found in database"
             )
         
         user = result.data[0]

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.api import ml_analysis
 
 
 app = FastAPI(
@@ -17,6 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include ML Analysis routes
+app.include_router(ml_analysis.router, prefix="/api/v1/ml", tags=["ML Analysis"])
 
 
 @app.get("/")

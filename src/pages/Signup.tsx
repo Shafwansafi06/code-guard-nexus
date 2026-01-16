@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Eye, EyeOff, Lock, Mail, User, Building, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 const benefits = [
   'AI-generated code detection',
@@ -37,18 +38,31 @@ export default function Signup() {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // Simulate signup - replace with actual auth
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      const response = await api.auth.register({
+        email: formData.email,
+        password: formData.password,
+        username: formData.name, // Use name as username
+        role: 'instructor' // Default role for signup
+      });
+
       toast({
         title: "Account created!",
-        description: "Welcome to CodeGuard AI. Let's get started!",
+        description: "Welcome to CodeGuard AI. Please sign in with your credentials.",
       });
-      navigate('/dashboard');
-    }, 1000);
+      navigate('/login');
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.response?.data?.detail || "An error occurred during registration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,7 +72,7 @@ export default function Signup() {
         <div className="absolute inset-0 particles-bg" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-        
+
         <div className="relative z-10 max-w-md">
           <div className="w-24 h-24 mb-8 rounded-2xl gradient-hero flex items-center justify-center">
             <Shield className="w-12 h-12 text-white" />
@@ -69,7 +83,7 @@ export default function Signup() {
           <p className="text-muted-foreground mb-8">
             Join 1,000+ CS professors who trust CodeGuard AI for academic integrity.
           </p>
-          
+
           <div className="space-y-4">
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-center gap-3">
@@ -86,8 +100,8 @@ export default function Signup() {
       {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -181,8 +195,8 @@ export default function Signup() {
             </div>
 
             <div className="flex items-start gap-2">
-              <Checkbox 
-                id="terms" 
+              <Checkbox
+                id="terms"
                 checked={agreeTerms}
                 onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
                 className="mt-1"
@@ -195,10 +209,10 @@ export default function Signup() {
               </Label>
             </div>
 
-            <Button 
-              type="submit" 
-              variant="hero" 
-              className="w-full" 
+            <Button
+              type="submit"
+              variant="hero"
+              className="w-full"
               size="lg"
               disabled={isLoading}
             >

@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,16 +21,36 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate login - replace with actual auth
-    setTimeout(() => {
-      setIsLoading(false);
+
+    try {
+      // 1. Authenticate with Supabase directly for the session
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      // 2. Also call our backend login to verify/fetch user details
+      await api.auth.login({
+        email,
+        password,
+      });
+
       toast({
         title: "Welcome back!",
         description: "You have been successfully logged in.",
       });
       navigate('/dashboard');
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || error.response?.data?.detail || "Invalid email or password.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -36,8 +58,8 @@ export default function Login() {
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -99,8 +121,8 @@ export default function Login() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="remember" 
+                <Checkbox
+                  id="remember"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                 />
@@ -108,18 +130,18 @@ export default function Login() {
                   Remember me
                 </Label>
               </div>
-              <Link 
-                to="/forgot-password" 
+              <Link
+                to="/forgot-password"
                 className="text-sm text-primary hover:underline"
               >
                 Forgot password?
               </Link>
             </div>
 
-            <Button 
-              type="submit" 
-              variant="hero" 
-              className="w-full" 
+            <Button
+              type="submit"
+              variant="hero"
+              className="w-full"
               size="lg"
               disabled={isLoading}
             >
@@ -188,7 +210,7 @@ export default function Login() {
         <div className="absolute inset-0 particles-bg" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-        
+
         <div className="relative z-10 text-center max-w-md">
           <div className="w-24 h-24 mx-auto mb-8 rounded-2xl gradient-hero flex items-center justify-center">
             <Shield className="w-12 h-12 text-white" />

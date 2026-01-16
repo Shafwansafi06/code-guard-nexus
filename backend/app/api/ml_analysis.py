@@ -38,6 +38,7 @@ class AIDetectionResponse(BaseModel):
     confidence: float
     risk_level: str
     risk_description: str
+    note: Optional[str] = None
 
 
 class SimilarityResponse(BaseModel):
@@ -56,8 +57,7 @@ class ComprehensiveAnalysisResponse(BaseModel):
 
 @router.post("/detect-ai", response_model=AIDetectionResponse)
 async def detect_ai_generated_code(
-    request: CodeAnalysisRequest,
-    current_user: dict = Depends(get_current_user)
+    request: CodeAnalysisRequest
 ):
     """
     Detect if code is AI-generated
@@ -88,7 +88,8 @@ async def detect_ai_generated_code(
             human_score=result['human_score'],
             confidence=result['confidence'],
             risk_level=risk_level,
-            risk_description=risk_description
+            risk_description=risk_description,
+            note=result.get('note')
         )
     
     except Exception as e:
@@ -101,8 +102,7 @@ async def detect_ai_generated_code(
 
 @router.post("/compute-similarity", response_model=SimilarityResponse)
 async def compute_similarity(
-    request: SimilarityRequest,
-    current_user: dict = Depends(get_current_user)
+    request: SimilarityRequest
 ):
     """
     Compute similarity between two code snippets
@@ -136,9 +136,8 @@ async def compute_similarity(
 
 
 @router.post("/analyze-code", response_model=ComprehensiveAnalysisResponse)
-async def comprehensive_code_analysis(
-    request: CodeAnalysisRequest,
-    current_user: dict = Depends(get_current_user)
+async def analyze_code(
+    request: CodeAnalysisRequest
 ):
     """
     Comprehensive code analysis including AI detection and embeddings
@@ -162,10 +161,9 @@ async def comprehensive_code_analysis(
         )
 
 
-@router.post("/batch-analyze")
-async def batch_analyze_codes(
-    request: BatchCodeAnalysisRequest,
-    current_user: dict = Depends(get_current_user)
+@router.post("/batch-analysis")
+async def batch_analysis(
+    request: BatchCodeAnalysisRequest
 ):
     """
     Batch analysis of multiple code snippets
@@ -239,7 +237,7 @@ async def find_similar_submissions(
 
 
 @router.get("/model-status")
-async def get_model_status(current_user: dict = Depends(get_current_user)):
+async def get_model_status():
     """
     Get ML model status and information
     """

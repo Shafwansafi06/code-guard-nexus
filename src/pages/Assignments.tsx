@@ -4,11 +4,11 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Plus, 
-  Search, 
-  FileText, 
-  Users, 
+import {
+  Plus,
+  Search,
+  FileText,
+  Users,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -26,89 +26,60 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { assignmentsApi } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Trash2, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const assignments = [
-  {
-    id: 1,
-    name: 'Assignment 3: Binary Search Tree Implementation',
-    course: 'CS101: Data Structures',
-    dueDate: '2024-10-15',
-    submissions: 45,
-    analyzed: 45,
-    plagiarismCases: 8,
-    aiGenerated: 12,
-    status: 'completed',
-    avgSimilarity: 23,
-    timeAnalyzed: '2 hours ago',
-    cleanFiles: 25,
-  },
-  {
-    id: 2,
-    name: 'Assignment 2: Graph Algorithms - DFS & BFS',
-    course: 'CS201: Advanced Algorithms',
-    dueDate: '2024-10-12',
-    submissions: 38,
-    analyzed: 38,
-    plagiarismCases: 5,
-    aiGenerated: 8,
-    status: 'completed',
-    avgSimilarity: 18,
-    timeAnalyzed: 'Yesterday',
-    cleanFiles: 25,
-  },
-  {
-    id: 3,
-    name: 'Assignment 2: Sorting Algorithms Comparison',
-    course: 'CS101: Data Structures',
-    dueDate: '2024-10-08',
-    submissions: 44,
-    analyzed: 44,
-    plagiarismCases: 6,
-    aiGenerated: 10,
-    status: 'completed',
-    avgSimilarity: 21,
-    timeAnalyzed: '3 days ago',
-    cleanFiles: 28,
-  },
-  {
-    id: 4,
-    name: 'Assignment 1: Process Scheduling Simulation',
-    course: 'CS301: Operating Systems',
-    dueDate: '2024-10-05',
-    submissions: 32,
-    analyzed: 32,
-    plagiarismCases: 3,
-    aiGenerated: 5,
-    status: 'completed',
-    avgSimilarity: 15,
-    timeAnalyzed: '5 days ago',
-    cleanFiles: 24,
-  },
-  {
-    id: 5,
-    name: 'Assignment 4: Hash Table Implementation',
-    course: 'CS101: Data Structures',
-    dueDate: '2024-11-01',
-    submissions: 42,
-    analyzed: 0,
-    plagiarismCases: 0,
-    aiGenerated: 0,
-    status: 'pending',
-    avgSimilarity: 0,
-    timeAnalyzed: 'Not analyzed',
-    cleanFiles: 0,
-  },
-];
+
 
 export default function Assignments() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'pending'>('all');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const filteredAssignments = assignments.filter(assignment => {
-    const matchesSearch = assignment.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         assignment.course.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || assignment.status === filterStatus;
-    return matchesSearch && matchesFilter;
+  const { data: assignmentsData = [], isLoading } = useQuery({
+    queryKey: ['assignments', filterStatus],
+    queryFn: () => assignmentsApi.list(undefined, filterStatus === 'all' ? undefined : filterStatus),
+  });
+
+  const assignments = Array.isArray(assignmentsData) ? assignmentsData : [];
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => assignmentsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      toast({ title: "Deleted", description: "Assignment removed successfully." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete assignment",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const startAnalysisMutation = useMutation({
+    mutationFn: (id: string) => assignmentsApi.startAnalysis(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      toast({ title: "Analysis Started", description: "The detection engine is now processing files." });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to start analysis",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const filteredAssignments = assignments.filter((assignment: any) => {
+    const matchesSearch = assignment.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
   });
 
   const getStatusColor = (status: string) => {
@@ -220,111 +191,128 @@ export default function Assignments() {
 
         {/* Assignments List */}
         <div className="space-y-4">
-          {filteredAssignments.map((assignment) => {
-            const riskLevel = getRiskLevel(assignment.plagiarismCases, assignment.submissions);
-            
-            return (
-              <div 
-                key={assignment.id}
-                className="p-6 rounded-xl bg-card border border-border/50 hover:border-primary/50 transition-all"
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  {/* Assignment Info */}
-                  <div className="flex-1 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-1">{assignment.name}</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          {assignment.course}
-                          <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                          <Calendar className="w-3 h-3" />
-                          Due: {new Date(assignment.dueDate).toLocaleDateString()}
-                        </p>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 space-y-4">
+              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+              <p className="text-muted-foreground animate-pulse">Fetching assignments...</p>
+            </div>
+          ) : filteredAssignments.length > 0 ? (
+            filteredAssignments.map((assignment: any) => {
+              const riskLevel = getRiskLevel(assignment.plagiarism_count || 0, assignment.submission_count || 0);
+
+              return (
+                <div
+                  key={assignment.id}
+                  className="p-6 rounded-xl bg-card border border-border/50 hover:border-primary/50 transition-all shadow-sm group"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Assignment Info */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">{assignment.name}</h3>
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            Course ID: {assignment.course_id}
+                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                            <Calendar className="w-3 h-3" />
+                            Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'N/A'}
+                          </p>
+                        </div>
+                        <Badge className={cn("px-2.5 py-0.5 rounded-full border", getStatusColor(assignment.status))}>
+                          {assignment.status === 'completed' ? 'Analyzed' : assignment.status.toUpperCase()}
+                        </Badge>
                       </div>
-                      <Badge className={getStatusColor(assignment.status)}>
-                        {assignment.status === 'completed' ? 'Analyzed' : 'Pending Review'}
-                      </Badge>
+
+                      {/* Stats Row */}
+                      {assignment.status === 'completed' ? (
+                        <div className="flex flex-wrap gap-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-foreground font-semibold">{assignment.submission_count || 0}</span>
+                            <span className="text-muted-foreground">submissions</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-destructive" />
+                            <span className="text-foreground font-semibold">{assignment.plagiarism_count || 0}</span>
+                            <span className="text-muted-foreground">plagiarism</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Brain className="w-4 h-4 text-accent" />
+                            <span className="text-foreground font-semibold">{assignment.ai_count || 0}</span>
+                            <span className="text-muted-foreground">AI-generated</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={cn("font-bold", riskLevel.color)}>{riskLevel.label}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-sm text-warning font-medium">
+                          <Clock className="w-4 h-4 animate-pulse" />
+                          <span>Analysis {assignment.status}</span>
+                        </div>
+                      )}
+
+                      <p className="text-xs text-muted-foreground">
+                        {assignment.status === 'completed' ? 'Last analyzed recently' : 'Created ' + new Date(assignment.created_at || Date.now()).toLocaleDateString()}
+                      </p>
                     </div>
 
-                    {/* Stats Row */}
-                    {assignment.status === 'completed' ? (
-                      <div className="flex flex-wrap gap-6 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-foreground font-medium">{assignment.submissions}</span>
-                          <span className="text-muted-foreground">submissions</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-destructive" />
-                          <span className="text-foreground font-medium">{assignment.plagiarismCases}</span>
-                          <span className="text-muted-foreground">plagiarism</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Brain className="w-4 h-4 text-accent" />
-                          <span className="text-foreground font-medium">{assignment.aiGenerated}</span>
-                          <span className="text-muted-foreground">AI-generated</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="w-4 h-4 text-success" />
-                          <span className="text-foreground font-medium">{assignment.cleanFiles}</span>
-                          <span className="text-muted-foreground">clean</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium ${riskLevel.color}`}>{riskLevel.label}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-warning">
-                        <Clock className="w-4 h-4" />
-                        <span>Waiting for analysis</span>
-                      </div>
-                    )}
-
-                    <p className="text-xs text-muted-foreground">
-                      {assignment.timeAnalyzed}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {assignment.status === 'completed' ? (
-                      <>
-                        <Link to={`/assignments/${assignment.id}/results`}>
-                          <Button variant="default" size="sm" className="gap-2">
-                            <Eye className="w-4 h-4" />
-                            View Results
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {assignment.status === 'completed' ? (
+                        <>
+                          <Link to={`/assignments/${assignment.id}/results`}>
+                            <Button variant="default" size="sm" className="gap-2 rounded-full shadow-md hover:shadow-lg transition-all">
+                              <Eye className="w-4 h-4" />
+                              View Results
+                            </Button>
+                          </Link>
+                          <Button variant="outline" size="sm" className="gap-2 rounded-full">
+                            <Download className="w-4 h-4" />
+                            Report
                           </Button>
-                        </Link>
-                        <Button variant="outline" size="sm" className="gap-2">
-                          <Download className="w-4 h-4" />
-                          Export
-                        </Button>
-                      </>
-                    ) : (
-                      <Link to={`/assignments/${assignment.id}/results`}>
-                        <Button variant="default" size="sm" className="gap-2">
+                        </>
+                      ) : (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-2 rounded-full shadow-md hover:bg-primary/90"
+                          onClick={() => startAnalysisMutation.mutate(assignment.id)}
+                          disabled={startAnalysisMutation.isPending}
+                        >
+                          {startAnalysisMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                           Start Analysis
                         </Button>
-                      </Link>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Re-analyze</DropdownMenuItem>
-                        <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                        <DropdownMenuItem>Share Report</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      )}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="rounded-full">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl border-border/50">
+                          <DropdownMenuItem className="gap-2"><TrendingUp className="w-4 h-4" /> Re-analyze</DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2"><Clock className="w-4 h-4" /> Edit Details</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive gap-2" onClick={() => deleteMutation.mutate(assignment.id)}>
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="py-24 text-center border-2 border-dashed border-border rounded-2xl bg-card/10 backdrop-blur-sm">
+              <FileText className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
+              <h3 className="text-xl font-bold">No assignments found</h3>
+              <p className="text-muted-foreground max-w-xs mx-auto">Upload some code to start protecting academic integrity.</p>
+              <Link to="/assignments/new" className="mt-6 inline-block">
+                <Button variant="hero">Create First Scan</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -29,8 +29,12 @@ cd backend
 PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
 echo "Python version: $PYTHON_VERSION"
 
-if (( $(echo "$PYTHON_VERSION < 3.9" | bc -l) )); then
-    echo -e "${RED}Error: Python 3.9+ required${NC}"
+# Robust version check
+PYTHON_MAJOR=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1)
+PYTHON_MINOR=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f2)
+
+if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 9 ]); then
+    echo -e "${RED}Error: Python 3.9+ required (found $PYTHON_VERSION)${NC}"
     exit 1
 fi
 
@@ -149,7 +153,7 @@ try:
     import fastapi
     import supabase
     import pydantic
-    import jwt
+    from jose import jwt
     print("✓ All backend packages imported successfully")
 except ImportError as e:
     print(f"✗ Import error: {e}")

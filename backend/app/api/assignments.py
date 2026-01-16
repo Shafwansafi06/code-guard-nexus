@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from typing import List, Optional
 from app.core.database import get_supabase
 from app.core.security import get_current_user, get_instructor_user
 from app.schemas import (
     AssignmentCreate, AssignmentUpdate, AssignmentResponse, AssignmentWithStats
 )
+from app.services.plagiarism_service import plagiarism_service
 
 router = APIRouter()
 
@@ -233,6 +234,7 @@ async def delete_assignment(
 @router.post("/{assignment_id}/start-analysis", status_code=status.HTTP_202_ACCEPTED)
 async def start_analysis(
     assignment_id: str,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_instructor_user)
 ):
     """Start plagiarism analysis for an assignment"""
@@ -273,6 +275,9 @@ async def start_analysis(
                 except:
                     # Pair might already exist, skip
                     pass
+        
+        # Trigger actual ML analysis in background
+        background_tasks.add_task(plagiarism_service.run_assignment_analysis, assignment_id)
         
         return {
             "message": "Analysis started",
