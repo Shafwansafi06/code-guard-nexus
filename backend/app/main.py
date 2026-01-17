@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import auth, courses, assignments, submissions, comparisons, dashboard, ml_analysis
+from app.api import auth, courses, assignments, submissions, comparisons, dashboard, ml_analysis, google_classroom
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -60,6 +60,12 @@ app.include_router(
     ml_analysis.router,
     prefix=f"{settings.API_V1_STR}/ml",
     tags=["ML Analysis"]
+)
+
+app.include_router(
+    google_classroom.router,
+    prefix=f"{settings.API_V1_STR}/google-classroom",
+    tags=["Google Classroom"]
 )
 
 

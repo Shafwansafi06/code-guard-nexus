@@ -13,7 +13,8 @@ import {
   Calendar,
   Edit,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  Download
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,10 +23,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CreateCourseDialog } from '@/components/dashboard/CreateCourseDialog';
+import { GoogleClassroomConnect } from '@/components/google-classroom/GoogleClassroomConnect';
+import { ImportCourseDialog } from '@/components/google-classroom/ImportCourseDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { coursesApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BookOpen as BookIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const FALLBACK_COLORS = [
   'from-primary/20 to-secondary/20',
@@ -37,8 +41,12 @@ const FALLBACK_COLORS = [
 export default function Courses() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpne, setIsDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get user ID from auth context or local storage
+  const userId = localStorage.getItem('user_id') || '';
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
@@ -79,10 +87,20 @@ export default function Courses() {
               Manage your courses and track plagiarism across assignments.
             </p>
           </div>
-          <Button variant="hero" className="gap-2" onClick={() => setIsDialogOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Create Course
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsImportDialogOpen(true)}
+            >
+              <Download className="w-4 h-4" />
+              Import from Google Classroom
+            </Button>
+            <Button variant="hero" className="gap-2" onClick={() => setIsDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Create Course
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -212,6 +230,15 @@ export default function Courses() {
         <CreateCourseDialog
           open={isDialogOpne}
           onOpenChange={setIsDialogOpen}
+        />
+
+        <ImportCourseDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+          userId={userId}
+          onImportSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['courses'] });
+          }}
         />
       </div>
     </DashboardLayout>

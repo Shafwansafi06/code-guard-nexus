@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # Google
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    GOOGLE_CLIENT_SECRETS_FILE: Optional[str] = "client_secret.json"
+    GOOGLE_OAUTH_REDIRECT_URI: Optional[str] = "http://localhost:5173/auth/google/callback"
     
     @property
     def allowed_origins_list(self) -> List[str]:

@@ -47,6 +47,7 @@
 - ⚡ **High Performance**: Process 1000+ submissions with optimized algorithms
 - 🔐 **Enterprise Security**: Supabase backend with RLS and JWT authentication
 - 🎨 **Modern UI/UX**: React + TailwindCSS with shadcn/ui components
+- 🎓 **Google Classroom Integration**: Import courses and assignments directly from Google Classroom
 
 ---
 
@@ -397,6 +398,7 @@ Pairwise similarity comparisons between submissions within an assignment.
 - Multi-semester support
 - Assignment templates
 - Student roster management
+- **🎓 Google Classroom Import**: One-click course and assignment import
 
 #### 🔍 Assignment Analysis
 - Drag-and-drop file upload
@@ -506,6 +508,37 @@ uvicorn app.main:app --reload
    
    -- Create policies (see database/policies.sql)
    ```
+
+---
+
+## 🎓 Google Classroom Integration
+
+CodeGuard Nexus seamlessly integrates with Google Classroom to streamline your workflow.
+
+### Features
+- ✅ OAuth 2.0 secure authentication
+- ✅ Import courses with one click
+- ✅ Import assignments automatically
+- ✅ View student rosters
+- ✅ Sync status tracking
+- ✅ Automatic token refresh
+
+### Quick Setup
+
+1. **Create Google Cloud Project** and enable Google Classroom API
+2. **Configure OAuth consent screen** with required scopes
+3. **Download credentials** and place in `backend/client_secret.json`
+4. **Run database migration**:
+   ```bash
+   psql $SUPABASE_DB_URL -f backend/database/migrations/google_classroom_integration.sql
+   ```
+5. **Update `.env`** file:
+   ```env
+   GOOGLE_CLIENT_SECRETS_FILE=client_secret.json
+   GOOGLE_OAUTH_REDIRECT_URI=http://localhost:5173/auth/google/callback
+   ```
+
+📖 **Full Setup Guide**: See [GOOGLE_CLASSROOM_SETUP.md](./GOOGLE_CLASSROOM_SETUP.md) for detailed instructions.
 
 ---
 

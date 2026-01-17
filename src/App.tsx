@@ -17,6 +17,7 @@ import History from "./pages/History";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MLAnalysis from "./pages/MLAnalysis";
+import { GoogleClassroomCallback } from "./pages/GoogleClassroomCallback";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,9 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          
+          {/* OAuth Callback */}
+          <Route path="/auth/google/callback" element={<GoogleClassroomCallback />} />
           
           {/* Authenticated Pages */}
           <Route path="/dashboard" element={<Dashboard />} />
