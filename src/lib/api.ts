@@ -82,100 +82,81 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 
-// ==================== Courses API ====================
-export const coursesApi = {
-  list: (semester?: string) =>
-    apiClient.get('/courses', semester ? { semester } : undefined),
+// ==================== Interfaces ====================
 
-  get: (id: string) =>
-    apiClient.get(`/courses/${id}`),
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  role: string;
+  organization_id?: string;
+}
 
-  create: (data: any) =>
-    apiClient.post('/courses', data),
+export interface Course {
+  id: string;
+  name: string;
+  code: string;
+  semester: string;
+  instructor_id: string;
+  assignment_count?: number;
+  student_count?: number;
+}
 
-  update: (id: string, data: any) =>
-    apiClient.put(`/courses/${id}`, data),
+export interface Assignment {
+  id: string;
+  name: string;
+  course_id: string;
+  course_name?: string;
+  due_date?: string;
+  settings: Record<string, any>;
+  status: string;
+  submission_count?: number;
+  pending_analyses?: number;
+  average_similarity?: number;
+}
 
-  delete: (id: string) =>
-    apiClient.delete(`/courses/${id}`),
-};
+export interface Submission {
+  id: string;
+  assignment_id: string;
+  student_identifier: string;
+  file_count: number;
+  status: string;
+  submission_time: string;
+  files?: FileData[];
+}
 
-// ==================== Assignments API ====================
-export const assignmentsApi = {
-  list: (courseId?: string, status?: string) =>
-    apiClient.get('/assignments', { course_id: courseId, status_filter: status }),
+export interface FileData {
+  id: string;
+  submission_id: string;
+  filename: string;
+  language?: string;
+  file_hash: string;
+}
 
-  get: (id: string) =>
-    apiClient.get(`/assignments/${id}`),
+export interface ComparisonPair {
+  id: string;
+  assignment_id: string;
+  submission_a_id: string;
+  submission_b_id: string;
+  similarity_score?: number;
+  status?: string;
+  submission_a?: Submission;
+  submission_b?: Submission;
+}
 
-  create: (data: any) =>
-    apiClient.post('/assignments', data),
-
-  update: (id: string, data: any) =>
-    apiClient.put(`/assignments/${id}`, data),
-
-  delete: (id: string) =>
-    apiClient.delete(`/assignments/${id}`),
-
-  startAnalysis: (id: string) =>
-    apiClient.post(`/assignments/${id}/start-analysis`),
-};
-
-// ==================== Submissions API ====================
-export const submissionsApi = {
-  list: (assignmentId?: string, status?: string) =>
-    apiClient.get('/submissions', { assignment_id: assignmentId, status_filter: status }),
-
-  get: (id: string) =>
-    apiClient.get(`/submissions/${id}`),
-
-  create: (data: any) =>
-    apiClient.post('/submissions', data),
-
-  update: (id: string, data: any) =>
-    apiClient.put(`/submissions/${id}`, data),
-
-  delete: (id: string) =>
-    apiClient.delete(`/submissions/${id}`),
-
-  upload: (assignmentId: string, studentIdentifier: string, files: File[]) => {
-    const formData = new FormData();
-    formData.append('assignment_id', assignmentId);
-    formData.append('student_identifier', studentIdentifier);
-    files.forEach((file) => {
-      formData.append('files', file);
-    });
-    return apiClient.upload('/submissions/upload', formData);
-  },
-};
-
-// ==================== Comparisons API ====================
-export const comparisonsApi = {
-  list: (assignmentId?: string, status?: string, minSimilarity?: number) =>
-    apiClient.get('/comparisons', {
-      assignment_id: assignmentId,
-      status_filter: status,
-      min_similarity: minSimilarity
-    }),
-
-  get: (id: string) =>
-    apiClient.get(`/comparisons/${id}`),
-
-  update: (id: string, data: any) =>
-    apiClient.put(`/comparisons/${id}`, data),
-
-  getHighRisk: (assignmentId: string, threshold: number = 0.7) =>
-    apiClient.get(`/comparisons/assignment/${assignmentId}/high-risk`, { threshold }),
-};
-
-// ==================== Dashboard API ====================
-export const dashboardApi = {
-  stats: () =>
-    apiClient.get('/dashboard/stats'),
-
-  analytics: (assignmentId: string) =>
-    apiClient.get(`/dashboard/analytics/${assignmentId}`),
-};
+export interface DashboardStats {
+  total_assignments: number;
+  total_submissions: number;
+  pending_reviews: number;
+  high_risk_cases: number;
+  recent_activity?: {
+    type: string;
+    student: string;
+    assignment: string;
+    timestamp: string;
+    status: string;
+  }[];
+}
 
 // ==================== ML Analysis API ====================
 export interface AIDetectionRequest {
@@ -214,6 +195,101 @@ export interface ComprehensiveAnalysisResponse {
   similarity_analysis?: any;
 }
 
+// ==================== Courses API ====================
+export const coursesApi = {
+  list: (semester?: string): Promise<Course[]> =>
+    apiClient.get('/courses', semester ? { semester } : undefined),
+
+  get: (id: string): Promise<Course> =>
+    apiClient.get(`/courses/${id}`),
+
+  create: (data: any): Promise<Course> =>
+    apiClient.post('/courses', data),
+
+  update: (id: string, data: any): Promise<Course> =>
+    apiClient.put(`/courses/${id}`, data),
+
+  delete: (id: string): Promise<any> =>
+    apiClient.delete(`/courses/${id}`),
+};
+
+// ==================== Assignments API ====================
+export const assignmentsApi = {
+  list: (courseId?: string, status?: string): Promise<Assignment[]> =>
+    apiClient.get('/assignments', { course_id: courseId, status_filter: status }),
+
+  get: (id: string): Promise<Assignment> =>
+    apiClient.get(`/assignments/${id}`),
+
+  create: (data: any): Promise<Assignment> =>
+    apiClient.post('/assignments', data),
+
+  update: (id: string, data: any): Promise<Assignment> =>
+    apiClient.put(`/assignments/${id}`, data),
+
+  delete: (id: string): Promise<any> =>
+    apiClient.delete(`/assignments/${id}`),
+
+  startAnalysis: (id: string): Promise<any> =>
+    apiClient.post(`/assignments/${id}/start-analysis`),
+};
+
+// ==================== Submissions API ====================
+export const submissionsApi = {
+  list: (assignmentId?: string, status?: string): Promise<Submission[]> =>
+    apiClient.get('/submissions', { assignment_id: assignmentId, status_filter: status }),
+
+  get: (id: string): Promise<Submission> =>
+    apiClient.get(`/submissions/${id}`),
+
+  create: (data: any): Promise<Submission> =>
+    apiClient.post('/submissions', data),
+
+  update: (id: string, data: any): Promise<Submission> =>
+    apiClient.put(`/submissions/${id}`, data),
+
+  delete: (id: string): Promise<any> =>
+    apiClient.delete(`/submissions/${id}`),
+
+  upload: (assignmentId: string, studentIdentifier: string, files: File[]): Promise<any> => {
+    const formData = new FormData();
+    formData.append('assignment_id', assignmentId);
+    formData.append('student_identifier', studentIdentifier);
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    return apiClient.upload('/submissions/upload', formData);
+  },
+};
+
+// ==================== Comparisons API ====================
+export const comparisonsApi = {
+  list: (assignmentId?: string, status?: string, minSimilarity?: number): Promise<ComparisonPair[]> =>
+    apiClient.get('/comparisons', {
+      assignment_id: assignmentId,
+      status_filter: status,
+      min_similarity: minSimilarity
+    }),
+
+  get: (id: string): Promise<ComparisonPair> =>
+    apiClient.get(`/comparisons/${id}`),
+
+  update: (id: string, data: any): Promise<ComparisonPair> =>
+    apiClient.put(`/comparisons/${id}`, data),
+
+  getHighRisk: (assignmentId: string, threshold: number = 0.7): Promise<ComparisonPair[]> =>
+    apiClient.get(`/comparisons/assignment/${assignmentId}/high-risk`, { threshold }),
+};
+
+// ==================== Dashboard API ====================
+export const dashboardApi = {
+  stats: (): Promise<DashboardStats> =>
+    apiClient.get('/dashboard/stats'),
+
+  analytics: (assignmentId: string): Promise<any> =>
+    apiClient.get(`/dashboard/analytics/${assignmentId}`),
+};
+
 export const mlAnalysisApi = {
   detectAI: (data: AIDetectionRequest): Promise<AIDetectionResponse> =>
     apiClient.post('/ml/detect-ai', data),
@@ -235,20 +311,25 @@ export const mlAnalysisApi = {
     }),
 };
 
-// ==================== Auth API ====================
 export const authApi = {
-  register: (data: any) =>
+  register: (data: any): Promise<any> =>
     apiClient.post('/auth/register', data),
 
-  login: (data: any) =>
+  login: (data: any): Promise<Token> =>
     apiClient.post('/auth/login', data),
 
-  logout: () =>
+  logout: (): Promise<any> =>
     apiClient.post('/auth/logout'),
 
-  me: () =>
+  me: (): Promise<User> =>
     apiClient.get('/auth/me'),
 };
+
+export interface Token {
+  access_token: string;
+  token_type: string;
+  user: User;
+}
 
 // ==================== Export all ====================
 export const api = {

@@ -32,10 +32,14 @@ export default function Login() {
       if (authError) throw authError;
 
       // 2. Also call our backend login to verify/fetch user details
-      await api.auth.login({
+      const response = await api.auth.login({
         email,
         password,
       });
+
+      if (response.user?.id) {
+        localStorage.setItem('user_id', response.user.id);
+      }
 
       toast({
         title: "Welcome back!",

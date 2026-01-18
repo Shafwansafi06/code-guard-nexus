@@ -61,7 +61,7 @@ export default function AssignmentResults() {
         </div>
 
         <div className="-mx-8">
-          <DashboardComponent />
+          <DashboardComponent assignmentId={id} assignment={assignment} />
         </div>
       </div>
     </DashboardLayout>

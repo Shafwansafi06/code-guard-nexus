@@ -11,7 +11,13 @@ import logging
 from pathlib import Path
 from .train_detector import DualHeadCodeModel, TrainingConfig
 
+from .train_detector import DualHeadCodeModel, TrainingConfig
+
 logger = logging.getLogger(__name__)
+
+# Suppress noisy transformers warnings about uninitialized weights
+# (We overwrite them immediately anyway)
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 
 class CodeDetectorInference:
@@ -96,7 +102,8 @@ class CodeDetectorInference:
             'print("hello world")', "print('hello world')",
             'console.log("hello world")', "console.log('hello world')",
             'public static void main', 'int main()', 'void main()',
-            'import os', 'import sys', 'import react'
+            'import os', 'import sys', 'import react',
+            '#include <iostream>', 'using namespace std'
         ]
         
         lower_code = code.lower()
@@ -113,9 +120,19 @@ class CodeDetectorInference:
             'def quicksort', 'def fibonacci', 'def bubble_sort',
             'return organize_by_pivot'
         ]
+        # Remove common "human" patterns that might be flagged
+        # (none of the above are strictly common in production code, but we can be more careful)
+        # For now, we'll keep these but require a higher threshold or combination
+        
         lower_code = code.lower()
         # If we see 2 or more of these in one snippet, it's suspiciously like AI output
+        # If we see 2 or more of these in one snippet, it's suspiciously like AI output
         matches = sum(1 for p in academic_patterns if p in lower_code)
+        
+        # Heuristic: If it's a very simple script but has complex algorithmic comments/structure
+        if "def solution" in lower_code and "class solution" in lower_code: # Leetcode style
+             matches += 1
+
         return matches >= 1
 
     @torch.no_grad()

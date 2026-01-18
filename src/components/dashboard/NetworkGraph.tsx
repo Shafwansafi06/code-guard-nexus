@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 
 interface Node {
   id: string;
-  x: number;
-  y: number;
+  x?: number;
+  y?: number;
   type: 'original' | 'copied' | 'ai' | 'independent';
   label: string;
 }
@@ -16,24 +16,11 @@ interface Edge {
   weight: number;
 }
 
-const mockNodes: Node[] = [
-  { id: '1', x: 200, y: 150, type: 'original', label: 'student_a.py' },
-  { id: '2', x: 350, y: 100, type: 'copied', label: 'student_b.py' },
-  { id: '3', x: 400, y: 220, type: 'ai', label: 'student_c.py' },
-  { id: '4', x: 150, y: 280, type: 'independent', label: 'student_d.py' },
-  { id: '5', x: 300, y: 300, type: 'copied', label: 'student_e.py' },
-  { id: '6', x: 500, y: 180, type: 'independent', label: 'student_f.py' },
-  { id: '7', x: 450, y: 320, type: 'ai', label: 'student_g.py' },
-];
-
-const mockEdges: Edge[] = [
-  { source: '1', target: '2', weight: 0.92 },
-  { source: '1', target: '5', weight: 0.78 },
-  { source: '2', target: '3', weight: 0.65 },
-  { source: '3', target: '7', weight: 0.85 },
-  { source: '4', target: '5', weight: 0.45 },
-  { source: '5', target: '7', weight: 0.55 },
-];
+interface NetworkGraphProps {
+  nodes?: Node[];
+  edges?: Edge[];
+  height?: number;
+}
 
 const typeColors: Record<string, string> = {
   original: '#00F0FF',
@@ -42,8 +29,9 @@ const typeColors: Record<string, string> = {
   independent: '#2ECC71',
 };
 
-export function NetworkGraph() {
+export function NetworkGraph({ nodes = [], edges = [], height = 400 }: NetworkGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -53,29 +41,52 @@ export function NetworkGraph() {
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
+    const updateSize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+
+    // Initial project of nodes onto a circular or grid layout if no x,y
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
+    const width = rect.width;
+    const h = rect.height;
+
+    const positionedNodes = nodes.map((node, i) => {
+      if (node.x !== undefined && node.y !== undefined) return { ...node } as Required<Node>;
+
+      // Simple circle layout
+      const angle = (i / nodes.length) * Math.PI * 2;
+      const radius = Math.min(width, h) * 0.35;
+      return {
+        ...node,
+        x: width / 2 + Math.cos(angle) * radius,
+        y: h / 2 + Math.sin(angle) * radius
+      } as Required<Node>;
+    });
 
     let animationFrame: number;
     let time = 0;
 
     const animate = () => {
       time += 0.02;
-      ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.clearRect(0, 0, width, h);
 
       // Draw edges
-      mockEdges.forEach(edge => {
-        const source = mockNodes.find(n => n.id === edge.source);
-        const target = mockNodes.find(n => n.id === edge.target);
+      edges.forEach(edge => {
+        const source = positionedNodes.find(n => n.id === edge.source);
+        const target = positionedNodes.find(n => n.id === edge.target);
         if (!source || !target) return;
 
         ctx.beginPath();
         ctx.moveTo(source.x, source.y);
         ctx.lineTo(target.x, target.y);
         ctx.strokeStyle = `rgba(0, 240, 255, ${edge.weight * 0.5})`;
-        ctx.lineWidth = edge.weight * 3;
+        ctx.lineWidth = Math.max(1, edge.weight * 4);
         ctx.setLineDash([5, 5]);
         ctx.lineDashOffset = -time * 10;
         ctx.stroke();
@@ -83,33 +94,33 @@ export function NetworkGraph() {
       });
 
       // Draw nodes
-      mockNodes.forEach((node, i) => {
+      positionedNodes.forEach((node, i) => {
         const floatY = Math.sin(time + i * 0.5) * 3;
-        const y = node.y + floatY;
+        const currentY = node.y + floatY;
 
         // Glow
-        const gradient = ctx.createRadialGradient(node.x, y, 0, node.x, y, 30);
-        gradient.addColorStop(0, typeColors[node.type] + '40');
+        const gradient = ctx.createRadialGradient(node.x, currentY, 0, node.x, currentY, 30);
+        gradient.addColorStop(0, (typeColors[node.type] || '#FFFFFF') + '40');
         gradient.addColorStop(1, 'transparent');
         ctx.beginPath();
-        ctx.arc(node.x, y, 30, 0, Math.PI * 2);
+        ctx.arc(node.x, currentY, 30, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
 
         // Node circle
         ctx.beginPath();
-        ctx.arc(node.x, y, 12, 0, Math.PI * 2);
-        ctx.fillStyle = typeColors[node.type];
+        ctx.arc(node.x, currentY, 12, 0, Math.PI * 2);
+        ctx.fillStyle = typeColors[node.type] || '#FFFFFF';
         ctx.fill();
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
         ctx.lineWidth = 2;
         ctx.stroke();
 
         // Label
-        ctx.font = '11px monospace';
+        ctx.font = '10px monospace';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
         ctx.textAlign = 'center';
-        ctx.fillText(node.label, node.x, y + 28);
+        ctx.fillText(node.label, node.x, currentY + 28);
       });
 
       animationFrame = requestAnimationFrame(animate);
@@ -117,13 +128,16 @@ export function NetworkGraph() {
 
     animate();
 
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      window.removeEventListener('resize', updateSize);
+    };
+  }, [nodes, edges]);
 
   return (
-    <div className="glass rounded-xl overflow-hidden">
+    <div ref={containerRef} className="glass rounded-xl overflow-hidden h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border/50">
+      <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/30">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <h3 className="text-sm font-semibold text-foreground">Collaboration Network</h3>
@@ -142,16 +156,22 @@ export function NetworkGraph() {
       </div>
 
       {/* Graph */}
-      <div className="relative h-[400px] bg-background/50">
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full"
-          style={{ width: '100%', height: '100%' }}
-        />
+      <div className="relative flex-1 bg-background/20 min-h-[300px]" style={{ height: `${height}px` }}>
+        {nodes.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-muted-foreground text-sm">No analysis data available</p>
+          </div>
+        ) : (
+          <canvas
+            ref={canvasRef}
+            className="w-full h-full"
+            style={{ width: '100%', height: '100%' }}
+          />
+        )}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 p-4 border-t border-border/50">
+      <div className="flex flex-wrap gap-4 p-4 border-t border-border/50 bg-card/20">
         {Object.entries(typeColors).map(([type, color]) => (
           <div key={type} className="flex items-center gap-2">
             <div

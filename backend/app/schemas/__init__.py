@@ -121,6 +121,7 @@ class AssignmentResponse(BaseModel):
     id: str
     name: str
     course_id: str
+    course_name: Optional[str] = None
     due_date: Optional[str]
     settings: Dict[str, Any]
     status: str

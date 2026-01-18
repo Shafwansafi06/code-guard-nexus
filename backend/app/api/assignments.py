@@ -60,7 +60,7 @@ async def list_assignments(
     supabase = get_supabase()
     
     try:
-        query = supabase.table("assignments").select("*")
+        query = supabase.table("assignments").select("*, courses(name)")
         
         if course_id:
             query = query.eq("course_id", course_id)
@@ -86,8 +86,11 @@ async def list_assignments(
                 scores = [c["similarity_score"] for c in comparisons.data if c.get("similarity_score") is not None]
                 avg_similarity = sum(scores) / len(scores) if scores else None
             
+            course_name = assignment.get("courses", {}).get("name") if assignment.get("courses") else None
+            
             assignments_with_stats.append({
                 **assignment,
+                "course_name": course_name,
                 "submission_count": len(submissions.data) if submissions.data else 0,
                 "pending_analyses": pending,
                 "average_similarity": avg_similarity
@@ -111,7 +114,7 @@ async def get_assignment(
     supabase = get_supabase()
     
     try:
-        result = supabase.table("assignments").select("*").eq("id", assignment_id).execute()
+        result = supabase.table("assignments").select("*, courses(name)").eq("id", assignment_id).execute()
         
         if not result.data:
             raise HTTPException(
@@ -132,8 +135,11 @@ async def get_assignment(
             scores = [c["similarity_score"] for c in comparisons.data if c.get("similarity_score") is not None]
             avg_similarity = sum(scores) / len(scores) if scores else None
         
+        course_name = assignment.get("courses", {}).get("name") if assignment.get("courses") else None
+        
         return {
             **assignment,
+            "course_name": course_name,
             "submission_count": len(submissions.data) if submissions.data else 0,
             "pending_analyses": pending,
             "average_similarity": avg_similarity

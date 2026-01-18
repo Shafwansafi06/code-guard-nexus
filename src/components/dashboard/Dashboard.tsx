@@ -1,108 +1,104 @@
-import { FileText, AlertTriangle, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, AlertTriangle, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import { StatCard } from './StatCard';
 import { SimilarityPairCard } from './SimilarityPairCard';
 import { NetworkGraph } from './NetworkGraph';
 import { CodeEditorDialog } from './CodeEditorDialog';
 import { CodeComparisonDialog } from './CodeComparisonDialog';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api, Assignment } from '@/lib/api';
 
-const mockPairs = [
-  {
-    fileA: 'student_a.py',
-    fileB: 'student_b.py',
-    similarity: 92,
-    matches: ['Variable names', 'Logic flow', 'Comments'],
-    aiPattern: 87,
-  },
-  {
-    fileA: 'student_c.java',
-    fileB: 'student_d.java',
-    similarity: 89,
-    matches: ['Function structure', 'Error handling'],
-    aiPattern: 23,
-  },
-  {
-    fileA: 'student_e.cpp',
-    fileB: 'student_f.cpp',
-    similarity: 76,
-    matches: ['Algorithm', 'Naming convention'],
-  },
-  {
-    fileA: 'student_g.py',
-    fileB: 'student_h.py',
-    similarity: 68,
-    matches: ['Import statements', 'Class structure'],
-  },
-];
+interface DashboardProps {
+  assignmentId?: string;
+  assignment?: Assignment;
+}
 
-const mockCode: Record<string, string> = {
-  'student_a.py': `def calculate_average(scores):
-    # This function calculates the mean of a list of numbers
-    total = 0
-    for s in scores:
-        total += s
-    
-    avg = total / len(scores)
-    return avg
-
-def process_data(data):
-    # Main processing loop
-    results = []
-    for item in data:
-        res = calculate_average(item['scores'])
-        results.append(res)
-    return results`,
-  'student_b.py': `def get_mean_value(values):
-    # This function calculates the mean of a list of numbers
-    sum_val = 0
-    for v in values:
-        sum_val += v
-    
-    mean = sum_val / len(values)
-    return mean
-
-def handle_items(items):
-    # Main processing loop
-    output = []
-    for x in items:
-        val = get_mean_value(x['scores'])
-        output.append(val)
-    return output`,
-  'student_c.java': `public class DataProcessor {
-    public double calculateMean(List<Double> numbers) {
-        double sum = 0;
-        for (Double n : numbers) {
-            sum += n;
-        }
-        return sum / numbers.size();
-    }
-}`,
-  'student_d.java': `public class Analyzer {
-    public double getAverage(List<Double> vals) {
-        double total = 0;
-        for (Double v : vals) {
-            total += v;
-        }
-        return total / vals.size();
-    }
-}`
-};
-
-export function Dashboard() {
+export function Dashboard({ assignmentId, assignment: initialAssignment }: DashboardProps) {
   const [previewFile, setPreviewFile] = useState<string | null>(null);
-  const [comparePair, setComparePair] = useState<{ fileA: string, fileB: string, similarity: number } | null>(null);
+  const [previewCode, setPreviewCode] = useState<string>('');
+  const [comparePair, setComparePair] = useState<{
+    fileA: string,
+    fileB: string,
+    similarity: number,
+    codeA?: string,
+    codeB?: string
+  } | null>(null);
 
-  const handlePreview = (filename: string) => {
-    setPreviewFile(filename);
+  // Fetch submissions if assignmentId is provided
+  const { data: submissions, isLoading: loadingSubmissions } = useQuery({
+    queryKey: ['submissions', assignmentId],
+    queryFn: () => api.submissions.list(assignmentId),
+    enabled: !!assignmentId,
+  });
+
+  // Fetch comparisons if assignmentId is provided
+  const { data: comparisons, isLoading: loadingComparisons } = useQuery({
+    queryKey: ['comparisons', assignmentId],
+    queryFn: () => api.comparisons.getHighRisk(assignmentId!, 0.5), // Lower threshold for graph visualization
+    enabled: !!assignmentId,
+  });
+
+  // Map submissions to nodes
+  const nodes = useMemo(() => {
+    if (!submissions) return [];
+    return submissions.map(s => ({
+      id: s.id,
+      label: s.student_identifier,
+      type: (s.status === 'processing' ? 'ai' :
+        s.status === 'completed' ? 'independent' : 'original') as any
+    }));
+  }, [submissions]);
+
+  // Map comparisons to edges
+  const edges = useMemo(() => {
+    if (!comparisons) return [];
+    return comparisons.map(c => ({
+      source: c.submission_a_id,
+      target: c.submission_b_id,
+      weight: c.similarity_score || 0
+    }));
+  }, [comparisons]);
+
+  const handlePreview = async (filename: string, submissionId?: string) => {
+    if (!submissionId) {
+      setPreviewFile(filename);
+      setPreviewCode('# Mock code preview');
+      return;
+    }
+
+    try {
+      const submission = await api.submissions.get(submissionId);
+      setPreviewFile(filename);
+      // For now, we just show the filename as placeholder or first file content if available
+      setPreviewCode(submission.files?.[0]?.filename ? `// Content for ${submission.files[0].filename}` : '// No content available');
+    } catch (error) {
+      setPreviewFile(filename);
+      setPreviewCode('// Failed to load code');
+    }
   };
 
-  const handleCompare = (pair: typeof mockPairs[0]) => {
+  const handleCompare = (pair: any) => {
     setComparePair({
-      fileA: pair.fileA,
-      fileB: pair.fileB,
-      similarity: pair.similarity
+      fileA: pair.submission_a?.student_identifier || pair.fileA,
+      fileB: pair.submission_b?.student_identifier || pair.fileB,
+      similarity: pair.similarity_score || pair.similarity,
+      codeA: '// Code A',
+      codeB: '// Code B'
     });
   };
+
+  if (!assignmentId) {
+    // Return placeholder or default view if no ID (for general dashboard)
+    return null;
+  }
+
+  if (loadingSubmissions || loadingComparisons) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <section className="py-16 bg-card">
@@ -121,33 +117,33 @@ export function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           <StatCard
             icon={FileText}
-            label="Total Files"
-            value={45}
-            sublabel="analyzed"
+            label="Total Submissions"
+            value={submissions?.length || 0}
+            sublabel="recorded"
             variant="default"
             delay={0}
           />
           <StatCard
             icon={AlertTriangle}
             label="High Risk"
-            value={8}
-            sublabel="pairs detected"
+            value={comparisons?.filter(c => (c.similarity_score || 0) >= 0.8).length || 0}
+            sublabel="detected"
             variant="danger"
             delay={100}
           />
           <StatCard
             icon={AlertCircle}
             label="Medium Risk"
-            value={12}
-            sublabel="pairs detected"
+            value={comparisons?.filter(c => (c.similarity_score || 0) < 0.8 && (c.similarity_score || 0) >= 0.5).length || 0}
+            sublabel="detected"
             variant="warning"
             delay={200}
           />
           <StatCard
             icon={CheckCircle}
-            label="Low Risk"
-            value={25}
-            sublabel="pairs detected"
+            label="Clean"
+            value={(submissions?.length || 0) - (comparisons?.length || 0)}
+            sublabel="no match"
             variant="success"
             delay={300}
           />
@@ -157,7 +153,7 @@ export function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Network Graph */}
           <div className="lg:col-span-3">
-            <NetworkGraph />
+            <NetworkGraph nodes={nodes} edges={edges} />
           </div>
 
           {/* Suspicious Pairs List */}
@@ -165,25 +161,28 @@ export function Dashboard() {
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-destructive" />
-                High Risk Pairs
+                Detected Conflicts
               </h3>
-              <select className="bg-muted border border-border rounded-lg px-3 py-1.5 text-sm text-foreground">
-                <option>Similarity ↓</option>
-                <option>AI Pattern ↓</option>
-                <option>File Name</option>
-              </select>
             </div>
 
             <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-              {mockPairs.map((pair, index) => (
+              {comparisons?.map((pair, index) => (
                 <SimilarityPairCard
-                  key={index}
-                  {...pair}
+                  key={pair.id}
+                  fileA={pair.submission_a?.student_identifier || 'Unknown'}
+                  fileB={pair.submission_b?.student_identifier || 'Unknown'}
+                  similarity={Math.round((pair.similarity_score || 0) * 100)}
+                  matches={[]}
                   index={index}
-                  onPreview={handlePreview}
+                  onPreview={(filename) => handlePreview(filename, pair.submission_a_id)}
                   onCompare={() => handleCompare(pair)}
                 />
               ))}
+              {(!comparisons || comparisons.length === 0) && (
+                <div className="p-8 text-center bg-muted/20 rounded-xl border border-dashed">
+                  <p className="text-muted-foreground text-sm">No similarity conflicts detected yet.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -193,8 +192,8 @@ export function Dashboard() {
           open={!!previewFile}
           onOpenChange={(open) => !open && setPreviewFile(null)}
           filename={previewFile || ''}
-          code={previewFile ? (mockCode[previewFile] || '# No code available for this mock') : ''}
-          language={previewFile?.endsWith('.py') ? 'python' : previewFile?.endsWith('.java') ? 'java' : 'cpp'}
+          code={previewCode}
+          language={previewFile?.endsWith('.py') ? 'python' : 'cpp'}
         />
 
         <CodeComparisonDialog
@@ -202,8 +201,8 @@ export function Dashboard() {
           onOpenChange={(open) => !open && setComparePair(null)}
           fileA={comparePair?.fileA || ''}
           fileB={comparePair?.fileB || ''}
-          codeA={comparePair ? (mockCode[comparePair.fileA] || '# Original code\ndef dummy(): pass') : ''}
-          codeB={comparePair ? (mockCode[comparePair.fileB] || '# Copied code\ndef dummy(): pass') : ''}
+          codeA={comparePair?.codeA || ''}
+          codeB={comparePair?.codeB || ''}
           similarity={comparePair?.similarity || 0}
         />
       </div>

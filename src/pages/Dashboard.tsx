@@ -142,7 +142,7 @@ export default function Dashboard() {
         {/* Header */}
         <motion.div variants={itemVariants} className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-foreground">
+            <h1 className="text-2xl font-semibold text-foreground">
               Dashboard Overview
             </h1>
           </div>

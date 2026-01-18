@@ -212,7 +212,7 @@ export default function Assignments() {
                         <div>
                           <h3 className="text-lg font-semibold mb-1 group-hover:text-primary transition-colors">{assignment.name}</h3>
                           <p className="text-sm text-muted-foreground flex items-center gap-2">
-                            Course ID: {assignment.course_id}
+                            Course: {assignment.course_name || assignment.course_id}
                             <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
                             <Calendar className="w-3 h-3" />
                             Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'N/A'}
