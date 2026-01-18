@@ -26,7 +26,7 @@ import { CreateCourseDialog } from '@/components/dashboard/CreateCourseDialog';
 import { GoogleClassroomConnect } from '@/components/google-classroom/GoogleClassroomConnect';
 import { ImportCourseDialog } from '@/components/google-classroom/ImportCourseDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { coursesApi } from '@/lib/api';
+import { coursesApi, authApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, BookOpen as BookIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -46,7 +46,16 @@ export default function Courses() {
   const queryClient = useQueryClient();
 
   // Get user ID from auth context or local storage
-  const userId = localStorage.getItem('user_id') || '';
+  const localUserId = localStorage.getItem('user_id');
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => authApi.me(),
+    enabled: !localUserId,
+    retry: false
+  });
+
+  const userId = localUserId || user?.id || '';
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
