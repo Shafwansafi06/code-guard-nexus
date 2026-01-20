@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
+import { Shield, Eye, EyeOff, Lock, Mail, ArrowLeft, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { signInWithGoogle, signInWithPhone, verifyPhoneOTP } from '@/lib/auth-providers';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -15,6 +16,13 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Phone authentication states
+  const [showPhoneLogin, setShowPhoneLogin] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -57,6 +65,77 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Google sign-in failed');
+      }
+
+      // Redirect is handled by Supabase
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to Google sign-in.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Google sign-in failed",
+        description: error.message || "Failed to initiate Google sign-in.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhoneSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      if (!otpSent) {
+        // Send OTP
+        const result = await signInWithPhone(phoneNumber);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to send OTP');
+        }
+
+        setOtpSent(true);
+        toast({
+          title: "OTP Sent!",
+          description: "Check your phone for the verification code.",
+        });
+      } else {
+        // Verify OTP
+        const result = await verifyPhoneOTP(phoneNumber, otp);
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Invalid OTP');
+        }
+
+        if (result.user?.id) {
+          localStorage.setItem('user_id', result.user.id);
+        }
+
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully logged in.",
+        });
+        navigate('/dashboard');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Phone sign-in failed",
+        description: error.message || "Failed to sign in with phone.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left side - Form */}
@@ -79,11 +158,12 @@ export default function Login() {
             </Link>
             <h1 className="text-3xl font-bold mb-2">Welcome back, Professor</h1>
             <p className="text-muted-foreground">
-              Enter your credentials to access your account
+              {showPhoneLogin ? 'Sign in with your phone number' : 'Enter your credentials to access your account'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {!showPhoneLogin ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -162,7 +242,13 @@ export default function Login() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" type="button" className="w-full">
+              <Button 
+                variant="outline" 
+                type="button" 
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
@@ -183,17 +269,80 @@ export default function Login() {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" type="button" className="w-full">
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M21.17 2.06A13.1 13.1 0 0 0 19 1.87a12.94 12.94 0 0 0-7 2.05 12.94 12.94 0 0 0-7-2 13.1 13.1 0 0 0-2.17.19 1 1 0 0 0-.83 1v12a1 1 0 0 0 1.17 1 10.9 10.9 0 0 1 8.25 1.91l.58.41.58-.41A10.9 10.9 0 0 1 21 15.06a1 1 0 0 0 1-1V3.06a1 1 0 0 0-.83-1Z"
-                  />
-                </svg>
-                Microsoft
+              <Button 
+                variant="outline" 
+                type="button" 
+                className="w-full"
+                onClick={() => setShowPhoneLogin(true)}
+                disabled={isLoading}
+              >
+                <Phone className="w-5 h-5 mr-2" />
+                Phone
               </Button>
             </div>
           </form>
+          ) : (
+            <form onSubmit={handlePhoneSignIn} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1 (555) 000-0000"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="pl-10"
+                    disabled={otpSent}
+                    required
+                  />
+                </div>
+              </div>
+
+              {otpSent && (
+                <div className="space-y-2">
+                  <Label htmlFor="otp">Verification Code</Label>
+                  <Input
+                    id="otp"
+                    type="text"
+                    placeholder="000000"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    maxLength={6}
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Enter the 6-digit code sent to your phone
+                  </p>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                variant="hero"
+                className="w-full"
+                size="lg"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : otpSent ? 'Verify & Sign In' : 'Send Code'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setShowPhoneLogin(false);
+                  setOtpSent(false);
+                  setPhoneNumber('');
+                  setOtp('');
+                }}
+              >
+                Back to email login
+              </Button>
+            </form>
+          )}
 
           <p className="text-center text-muted-foreground mt-8">
             Don't have an account?{' '}

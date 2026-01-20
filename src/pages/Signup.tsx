@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, Eye, EyeOff, Lock, Mail, User, Building, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Shield, Eye, EyeOff, Lock, Mail, User, Building, ArrowLeft, CheckCircle, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import { signInWithGoogle } from '@/lib/auth-providers';
 
 const benefits = [
   'AI-generated code detection',
@@ -61,6 +62,38 @@ export default function Signup() {
         variant: "destructive",
       });
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    if (!agreeTerms) {
+      toast({
+        title: "Terms required",
+        description: "Please agree to the terms and conditions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Google sign-up failed');
+      }
+
+      toast({
+        title: "Redirecting...",
+        description: "Taking you to Google sign-up.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Google sign-up failed",
+        description: error.message || "Failed to initiate Google sign-up.",
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   };
@@ -229,7 +262,13 @@ export default function Signup() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" type="button" className="w-full">
+              <Button 
+                variant="outline" 
+                type="button" 
+                className="w-full"
+                onClick={handleGoogleSignUp}
+                disabled={isLoading}
+              >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
@@ -250,14 +289,15 @@ export default function Signup() {
                 </svg>
                 Google
               </Button>
-              <Button variant="outline" type="button" className="w-full">
-                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M21.17 2.06A13.1 13.1 0 0 0 19 1.87a12.94 12.94 0 0 0-7 2.05 12.94 12.94 0 0 0-7-2 13.1 13.1 0 0 0-2.17.19 1 1 0 0 0-.83 1v12a1 1 0 0 0 1.17 1 10.9 10.9 0 0 1 8.25 1.91l.58.41.58-.41A10.9 10.9 0 0 1 21 15.06a1 1 0 0 0 1-1V3.06a1 1 0 0 0-.83-1Z"
-                  />
-                </svg>
-                Microsoft
+              <Button 
+                variant="outline" 
+                type="button" 
+                className="w-full"
+                onClick={() => navigate('/login')}
+                disabled={isLoading}
+              >
+                <Phone className="w-5 h-5 mr-2" />
+                Phone
               </Button>
             </div>
           </form>

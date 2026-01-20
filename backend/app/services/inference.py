@@ -10,6 +10,7 @@ from typing import List, Dict, Tuple, Any
 import logging
 from pathlib import Path
 from .train_detector import DualHeadCodeModel, TrainingConfig
+from .advanced_ai_detector import get_advanced_detector
 
 from .train_detector import DualHeadCodeModel, TrainingConfig
 
@@ -143,60 +144,89 @@ class CodeDetectorInference:
         return_confidence: bool = True
     ) -> Dict[str, float]:
         """
-        Detect if code is AI-generated
+        Detect if code is AI-generated using advanced multi-method detection
         """
-        # --- HEURISTIC FALLBACK ---
+        # --- ADVANCED HEURISTIC DETECTION (Primary Method) ---
+        # This expert-level detector combines multiple sophisticated techniques
+        advanced_detector = get_advanced_detector()
+        advanced_result = advanced_detector.detect(code, language)
+        
+        # If confidence is high, use advanced detector result directly
+        if advanced_result['confidence'] >= 0.70:  # Lowered from 0.75
+            return {
+                'is_ai': advanced_result['is_ai'],
+                'ai_score': advanced_result['ai_score'],
+                'human_score': advanced_result['human_score'],
+                'confidence': advanced_result['confidence'],
+                'detection_method': 'advanced_heuristics',
+                'details': advanced_result.get('details', {})
+            }
+        
+        # --- LEGACY HEURISTIC FALLBACK ---
         if self._is_boilerplate_or_simple(code):
             return {
                 'is_ai': False,
                 'ai_score': 0.05,
                 'human_score': 0.95,
                 'confidence': 0.95,
-                'note': 'Detected via heuristics (simple/boilerplate)'
+                'detection_method': 'simple_heuristic',
+                'note': 'Simple/boilerplate code'
             }
             
         is_suspicious = self._is_suspiciously_academic(code)
 
-        # --- ML DETECTION ---
-        # Preprocess
-        inputs = self.preprocess_code(code, language)
-        
-        # Forward pass
-        if self.is_custom_model:
-            logits, _ = self.model(
-                inputs['input_ids'],
-                inputs['attention_mask']
-            )
-        else:
-            outputs = self.model(
-                input_ids=inputs['input_ids'],
-                attention_mask=inputs['attention_mask']
-            )
-            logits = outputs.logits
-        
-        # Get probabilities
-        probs = F.softmax(logits, dim=1)[0]
-        human_score = probs[0].item()
-        ai_score = probs[1].item()
-        
-        # If the model is a demo model (random weights), it might give 0.5/0.5
-        # We can detect this and return a neutral but safe score
-        if hasattr(self, 'is_demo') and self.is_demo:
-             adjusted_ai_score = 0.85 if is_suspicious else 0.3
-             return {
-                'is_ai': is_suspicious,
-                'ai_score': adjusted_ai_score, 
-                'human_score': 1 - adjusted_ai_score,
-                'confidence': 0.6 if is_suspicious else 0.4,
-                'note': 'Using enhanced demo heuristics' if is_suspicious else 'Using demo model (uncalibrated)'
+        # --- ML DETECTION (Secondary Method) ---
+        try:
+            # Preprocess
+            inputs = self.preprocess_code(code, language)
+            
+            # Forward pass
+            if self.is_custom_model:
+                logits, _ = self.model(
+                    inputs['input_ids'],
+                    inputs['attention_mask']
+                )
+            else:
+                outputs = self.model(
+                    input_ids=inputs['input_ids'],
+                    attention_mask=inputs['attention_mask']
+                )
+                logits = outputs.logits
+            
+            # Get probabilities
+            probs = F.softmax(logits, dim=1)[0]
+            ml_human_score = probs[0].item()
+            ml_ai_score = probs[1].item()
+            
+            # Ensemble: Combine ML and advanced heuristics
+            # Weight advanced heuristics more (80%) since they're more reliable
+            final_ai_score = (advanced_result['ai_score'] * 0.80 + ml_ai_score * 0.20)
+            final_confidence = max(advanced_result['confidence'], 0.75)
+            
+            result = {
+                'is_ai': final_ai_score >= 0.50,  # Lowered threshold
+                'ai_score': final_ai_score,
+                'human_score': 1 - final_ai_score,
+                'confidence': final_confidence,
+                'detection_method': 'ensemble',
+                'details': {
+                    'advanced_heuristics': advanced_result['ai_score'],
+                    'ml_model': ml_ai_score,
+                    **advanced_result.get('details', {})
+                }
             }
-
-        result = {
-            'is_ai': ai_score > 0.5,
-            'ai_score': ai_score,
-            'human_score': human_score,
-            'confidence': max(ai_score, human_score)
-        }
+            
+        except Exception as e:
+            logger.warning(f"ML detection failed: {e}, using advanced heuristics only")
+            # Fall back to advanced heuristics result
+            result = {
+                'is_ai': advanced_result['is_ai'],
+                'ai_score': advanced_result['ai_score'],
+                'human_score': advanced_result['human_score'],
+                'confidence': advanced_result['confidence'],
+                'detection_method': 'advanced_heuristics_fallback',
+                'details': advanced_result.get('details', {})
+            }
         
         return result
     

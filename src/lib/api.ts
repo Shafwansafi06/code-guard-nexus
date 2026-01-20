@@ -195,6 +195,87 @@ export interface ComprehensiveAnalysisResponse {
   similarity_analysis?: any;
 }
 
+// ==================== Clone Detection API ====================
+export interface CloneDetectionRequest {
+  code1: string;
+  code2: string;
+  threshold?: number;
+}
+
+export interface CloneDetectionResponse {
+  is_clone: boolean;
+  clone_probability: number;
+  non_clone_probability: number;
+  confidence: number;
+  similarity_score: number;
+  risk_level: 'high' | 'medium' | 'low' | 'none';
+  risk_description: string;
+  threshold: number;
+}
+
+export interface BatchCloneResponse {
+  total_comparisons: number;
+  clone_pairs_found: number;
+  clone_pairs: ClonePair[];
+  summary: {
+    total_codes: number;
+    threshold: number;
+    max_similarity: number;
+    avg_similarity: number;
+    high_risk_pairs: number;
+  };
+}
+
+export interface ClonePair {
+  pair: [number, number];
+  code1_index: number;
+  code2_index: number;
+  is_clone: boolean;
+  similarity_score: number;
+  clone_probability: number;
+  confidence: number;
+  risk_level: 'high' | 'medium' | 'low' | 'none';
+  risk_description: string;
+}
+
+export interface SimilarCodeResponse {
+  target_code_length: number;
+  total_candidates: number;
+  matches_found: number;
+  threshold: number;
+  top_matches: SimilarCodeMatch[];
+  summary: {
+    highest_similarity: number;
+    potential_plagiarism: number;
+    flagged_for_review: number[];
+  };
+}
+
+export interface SimilarCodeMatch {
+  candidate_index: number;
+  similarity_score: number;
+  clone_probability: number;
+  confidence: number;
+  risk_level: 'high' | 'medium' | 'low' | 'none';
+  risk_description: string;
+  is_clone: boolean;
+}
+
+export interface CloneDetectorStatus {
+  status: string;
+  backend?: string;
+  inference_speed?: string;
+  optimization_level?: string;
+  model_type?: string;
+  capabilities?: string[];
+  performance?: {
+    f1_score: number | string;
+    accuracy: number | string;
+    auc_roc: number | string;
+  };
+  recommendation?: string;
+}
+
 // ==================== Courses API ====================
 export const coursesApi = {
   list: (semester?: string): Promise<Course[]> =>
@@ -309,6 +390,27 @@ export const mlAnalysisApi = {
       corpus_codes: corpusCodes,
       query_language: queryLanguage || 'python'
     }),
+
+  // Clone Detection API (ONNX-powered)
+  detectClone: (data: CloneDetectionRequest): Promise<CloneDetectionResponse> =>
+    apiClient.post('/ml/detect-clone', data),
+
+  batchCloneDetection: (codes: string[], threshold?: number): Promise<BatchCloneResponse> =>
+    apiClient.post('/ml/batch-clone-detection', { 
+      codes, 
+      threshold: threshold || 0.6 
+    }),
+
+  findSimilarCode: (targetCode: string, candidateCodes: string[], threshold?: number, topK?: number): Promise<SimilarCodeResponse> =>
+    apiClient.post('/ml/find-similar-submissions', {
+      target_code: targetCode,
+      candidate_codes: candidateCodes,
+      threshold: threshold || 0.6,
+      top_k: topK || 5
+    }),
+
+  getCloneDetectorStatus: (): Promise<CloneDetectorStatus> =>
+    apiClient.get('/ml/clone-detector-status'),
 };
 
 export const authApi = {

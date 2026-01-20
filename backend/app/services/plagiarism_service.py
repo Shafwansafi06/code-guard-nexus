@@ -32,8 +32,7 @@ class PlagiarismService:
             submissions = submissions_result.data
             
             if len(submissions) < 2:
-                logger.warning(f"Not enough submissions for assignment {assignment_id} to perform comparison")
-                return
+                logger.info(f"Only {len(submissions)} submission(s) for assignment {assignment_id}. comparison will be skipped, but AI detection will run.")
 
             # 2. Update status to processing
             self.supabase.table("assignments").update({"status": "processing"}).eq("id", assignment_id).execute()

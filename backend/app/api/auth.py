@@ -151,6 +151,39 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     }
 
 
+@router.get("/user/{user_id}", response_model=UserResponse)
+async def get_user_by_id(user_id: str):
+    """Get user by ID (for OAuth callback validation)"""
+    admin_supabase = get_supabase_admin()
+    
+    try:
+        result = admin_supabase.table("users").select("*").eq("id", user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        user = result.data[0]
+        return {
+            "id": user["id"],
+            "email": user["email"],
+            "username": user["username"],
+            "role": user["role"],
+            "organization_id": user.get("organization_id"),
+            "is_active": user["is_active"],
+            "created_at": user["created_at"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch user: {str(e)}"
+        )
+
+
 @router.post("/refresh", response_model=Token)
 async def refresh_token(current_user: dict = Depends(get_current_user)):
     """Refresh access token"""

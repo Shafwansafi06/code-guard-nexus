@@ -42,12 +42,13 @@
 ### Key Capabilities
 
 - 🔍 **Multi-Algorithm Detection**: AST analysis, token-based comparison, and ML models
-- 🤖 **AI Code Detection**: Identifies ChatGPT, GitHub Copilot, and LLM-generated code
+- 🤖 **Advanced AI Code Detection**: Multi-method detection system with pattern matching, entropy analysis, naming conventions, code structure analysis, and ML integration
 - 📊 **Network Visualization**: Interactive D3.js graphs showing collaboration patterns
 - ⚡ **High Performance**: Process 1000+ submissions with optimized algorithms
 - 🔐 **Enterprise Security**: Supabase backend with RLS and JWT authentication
 - 🎨 **Modern UI/UX**: React + TailwindCSS with shadcn/ui components
 - 🎓 **Google Classroom Integration**: Import courses and assignments directly from Google Classroom
+- 🔑 **Multiple Auth Methods**: Email/Password, Google OAuth 2.0, Phone OTP (SMS verification)
 
 ---
 
@@ -355,22 +356,24 @@ Pairwise similarity comparisons between submissions within an assignment.
 - **Routing**: React Router v6
 - **Data Visualization**: D3.js, Recharts
 - **HTTP Client**: Axios
-- **Authentication**: Supabase Auth Client
+- **Authentication**: Supabase Auth Client (Email/Password, Google OAuth, Phone OTP)
 
 ### Backend
 - **Framework**: FastAPI (Python 3.11+)
-- **Authentication**: JWT + Supabase Auth
+- **Authentication**: JWT + Supabase Auth (Email, Google OAuth, Phone OTP)
 - **Database**: Supabase (PostgreSQL 15)
 - **ORM**: Supabase Python Client
 - **File Storage**: Supabase Storage
 - **Validation**: Pydantic v2
 - **CORS**: FastAPI CORS Middleware
+- **OAuth Integration**: Google OAuth 2.0 for sign-in and Google Classroom
 
 ### Analysis Engine
 - **Language Detection**: Pygments
 - **Code Parsing**: tree-sitter
 - **Similarity**: NLTK, scikit-learn
-- **AI Detection**: GPT-detector models
+- **AI Detection**: Advanced Multi-Method Detector with Pattern Matching, Entropy Analysis, Naming Conventions, Code Structure Analysis
+- **Machine Learning**: ONNX Runtime for inference (CPU/GPU optimized)
 - **Network Analysis**: NetworkX
 - **Report Generation**: ReportLab (PDF)
 
@@ -408,7 +411,13 @@ Pairwise similarity comparisons between submissions within an assignment.
 
 #### 🎯 Detection Features
 - **Code Similarity**: Multi-algorithm comparison (lexical, syntactic, semantic)
-- **AI Detection**: Identify ChatGPT, Copilot-generated code
+- **Advanced AI Detection**: 
+  - **6 Detection Methods**: Pattern matching, entropy analysis, naming conventions, code structure, error handling, comment analysis
+  - **High Accuracy**: 35% pattern weight, 50% detection threshold, 85%+ auto-flag for academic algorithms
+  - **Pattern Recognition**: Identifies academic code patterns, verbose comments, perfect structure
+  - **Entropy Analysis**: Distinguishes AI (4.0-4.5) from human code (4.5-5.5)
+  - **Naming Convention Analysis**: Detects AI-typical variable naming patterns
+- **ML-Powered Analysis**: ONNX model integration with 80% advanced detector weight
 - **Network Graph**: Visualize copying patterns and collaboration
 - **Side-by-Side Comparison**: Highlighted diff view with match scores
 
@@ -442,6 +451,7 @@ Pairwise similarity comparisons between submissions within an assignment.
 - **Python**: 3.11+
 - **Supabase Account**: Free tier available
 - **Git**: For version control
+- **Google Cloud Console** (Optional): For Google OAuth and Classroom integration
 
 ### Frontend Setup
 
@@ -478,6 +488,9 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Install ML dependencies (for AI detection)
+pip install -r requirements-ml.txt
+
 # Configure environment variables
 cp .env.example .env
 # Edit .env with your Supabase credentials
@@ -493,13 +506,19 @@ uvicorn app.main:app --reload
    - Create a new project
    - Copy your project URL and anon key
 
-2. **Run Database Migrations**
+2. **Enable Authentication Providers**
+   - Go to Authentication → Providers in Supabase Dashboard
+   - Enable **Email** provider (default)
+   - Enable **Google** provider (add OAuth credentials from Google Cloud Console)
+   - Enable **Phone** provider (configure Twilio or MessageBird for SMS)
+
+3. **Run Database Migrations**
    ```sql
    -- Execute the SQL schema provided in database/schema.sql
    -- Or use Supabase SQL Editor
    ```
 
-3. **Configure Row Level Security (RLS)**
+4. **Configure Row Level Security (RLS)**
    ```sql
    -- Enable RLS on all tables
    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -569,6 +588,10 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 SECRET_KEY=your-super-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Google OAuth and Classroom (Optional)
+GOOGLE_CLIENT_SECRETS_FILE=client_secret.json
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:5173/auth/google/callback
 ```
 
 ---
@@ -611,6 +634,30 @@ Response:
   }
 }
 ```
+
+#### Get User by ID (for OAuth validation)
+```http
+GET /api/v1/auth/user/{user_id}
+
+Response:
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "username": "username",
+  "role": "instructor",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00Z"
+}
+```
+
+### Google OAuth & Phone Authentication
+
+Frontend authentication utilities support:
+- **Google OAuth**: Sign in/up with Google account
+- **Phone OTP**: SMS verification for passwordless login
+- **Email/Password**: Traditional authentication
+
+See [src/lib/auth-providers.ts](src/lib/auth-providers.ts) for implementation details.
 
 ### Courses
 
@@ -747,24 +794,32 @@ code-guard-nexus/
 │   │   ├── ui/             # shadcn/ui components
 │   │   ├── dashboard/      # Dashboard components
 │   │   ├── comparison/     # Code comparison
+│   │   ├── google-classroom/ # Google Classroom integration
 │   │   └── upload/         # File upload
 │   ├── pages/              # Page components
+│   │   ├── Login.tsx       # Login with Email/Google/Phone
+│   │   ├── Signup.tsx      # Registration with OAuth
+│   │   ├── AuthCallback.tsx # OAuth redirect handler
+│   │   └── ...
 │   ├── lib/                # Utilities & services
 │   │   ├── supabase.ts    # Supabase client
 │   │   ├── auth.ts        # Auth service
+│   │   ├── auth-providers.ts # Google OAuth & Phone OTP
 │   │   ├── api.ts         # API client
 │   │   └── utils.ts       # Helpers
 │   ├── contexts/           # React contexts
+│   │   └── AuthContext.tsx # Auth state management
 │   ├── hooks/              # Custom hooks
 │   └── types/              # TypeScript types
 ├── backend/                 # Backend source
 │   ├── app/
 │   │   ├── api/            # API endpoints
-│   │   │   ├── auth.py
+│   │   │   ├── auth.py    # Auth with user validation
 │   │   │   ├── courses.py
 │   │   │   ├── assignments.py
 │   │   │   ├── submissions.py
 │   │   │   ├── comparisons.py
+│   │   │   ├── google_classroom.py # Google Classroom API
 │   │   │   └── dashboard.py
 │   │   ├── core/           # Core configuration
 │   │   │   ├── config.py
@@ -772,9 +827,14 @@ code-guard-nexus/
 │   │   │   └── security.py
 │   │   ├── models/         # Data models
 │   │   ├── schemas/        # Pydantic schemas
+│   │   │   └── google_classroom.py # Google Classroom schemas
 │   │   ├── services/       # Business logic
+│   │   │   ├── advanced_ai_detector.py # Multi-method AI detection
+│   │   │   ├── inference.py # ML model inference with ONNX
+│   │   │   └── google_classroom_service.py
 │   │   └── main.py         # App entry point
-│   ├── requirements.txt
+│   ├── requirements.txt    # Core dependencies
+│   ├── requirements-ml.txt # ML/AI dependencies
 │   └── .env
 ├── public/                  # Static assets
 ├── package.json

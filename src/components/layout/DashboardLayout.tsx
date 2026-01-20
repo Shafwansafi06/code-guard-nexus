@@ -12,7 +12,8 @@ import {
   Shield,
   User,
   Bell,
-  Brain
+  Brain,
+  GitCompare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const navItems = [
   { icon: BookOpen, label: 'Courses', path: '/courses' },
   { icon: FileText, label: 'Assignments', path: '/assignments' },
   { icon: Brain, label: 'ML Analysis', path: '/ml-analysis' },
+  { icon: GitCompare, label: 'Plagiarism Check', path: '/plagiarism' },
   { icon: Clock, label: 'History', path: '/history' },
   { icon: Settings, label: 'Settings', path: '/settings' },
   { icon: HelpCircle, label: 'Help', path: '/help' },

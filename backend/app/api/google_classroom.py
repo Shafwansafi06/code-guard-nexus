@@ -22,7 +22,7 @@ from app.schemas.google_classroom import (
 from app.services.google_classroom_service import google_classroom_service
 from app.core.database import get_supabase
 
-router = APIRouter(prefix="/google-classroom", tags=["Google Classroom"])
+router = APIRouter()
 
 
 @router.get("/auth/url", response_model=GoogleClassroomAuthURL)

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
@@ -17,6 +18,7 @@ import History from "./pages/History";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import MLAnalysis from "./pages/MLAnalysis";
+import Plagiarism from "./pages/Plagiarism";
 import { GoogleClassroomCallback } from "./pages/GoogleClassroomCallback";
 
 const queryClient = new QueryClient();
@@ -33,7 +35,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           
-          {/* OAuth Callback */}
+          {/* OAuth Callbacks */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/auth/google/callback" element={<GoogleClassroomCallback />} />
           
           {/* Authenticated Pages */}
@@ -44,6 +47,7 @@ const App = () => (
           <Route path="/assignments/new" element={<NewAssignment />} />
           <Route path="/assignments/:id/results" element={<AssignmentResults />} />
           <Route path="/ml-analysis" element={<MLAnalysis />} />
+          <Route path="/plagiarism" element={<Plagiarism />} />
           <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/help" element={<Help />} />

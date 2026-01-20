@@ -259,10 +259,10 @@ async def start_analysis(
         # Get all submissions for this assignment
         submissions = supabase.table("submissions").select("*").eq("assignment_id", assignment_id).execute()
         
-        if not submissions.data or len(submissions.data) < 2:
+        if not submissions.data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Need at least 2 submissions to perform analysis"
+                detail="No submissions found for analysis"
             )
         
         # Create comparison pairs (all combinations)
