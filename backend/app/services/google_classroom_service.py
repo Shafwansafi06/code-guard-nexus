@@ -37,8 +37,23 @@ class GoogleClassroomService:
     """Service for interacting with Google Classroom API"""
     
     def __init__(self):
-        self.client_secrets_file = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
-        self.redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:5173/auth/google/callback")
+        client_secrets_file = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
+        # Make path absolute if it's relative
+        if not os.path.isabs(client_secrets_file):
+            # Assume it's relative to the backend directory
+            backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            self.client_secrets_file = os.path.join(backend_dir, client_secrets_file)
+        else:
+            self.client_secrets_file = client_secrets_file
+        
+        # Verify file exists
+        if not os.path.exists(self.client_secrets_file):
+            print(f"WARNING: Google client secrets file not found at: {self.client_secrets_file}")
+    
+    @property
+    def redirect_uri(self):
+        """Get redirect URI from environment variable (dynamic)"""
+        return os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8080/auth/google/callback")
     
     def create_authorization_url(self, state: Optional[str] = None) -> tuple[str, str]:
         """
@@ -47,8 +62,13 @@ class GoogleClassroomService:
         Returns:
             tuple: (authorization_url, state)
         """
+        if not os.path.exists(self.client_secrets_file):
+            raise FileNotFoundError(f"Google client secrets file not found: {self.client_secrets_file}")
+            
         if state is None:
             state = secrets.token_urlsafe(32)
+        
+        print(f"Creating OAuth URL with redirect_uri: {self.redirect_uri}")
         
         flow = Flow.from_client_secrets_file(
             self.client_secrets_file,
@@ -63,6 +83,8 @@ class GoogleClassroomService:
             prompt='consent'
         )
         
+        print(f"Generated authorization URL: {authorization_url[:100]}...")
+        
         return authorization_url, state
     
     def exchange_code_for_tokens(self, code: str, state: str) -> Dict[str, Any]:
@@ -76,6 +98,11 @@ class GoogleClassroomService:
         Returns:
             dict: Token information including access_token, refresh_token, expires_in
         """
+        # Set environment variable before creating flow to relax scope validation
+        import os
+        os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+        os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Allow HTTP for local development
+        
         flow = Flow.from_client_secrets_file(
             self.client_secrets_file,
             scopes=SCOPES,
@@ -83,40 +110,65 @@ class GoogleClassroomService:
             state=state
         )
         
-        flow.fetch_token(code=code)
-        credentials = flow.credentials
+        print(f"Exchanging code for tokens with redirect_uri: {self.redirect_uri}")
         
-        return {
-            'access_token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'expires_in': 3600,  # Default to 1 hour
-            'token_type': 'Bearer',
-            'scope': ' '.join(SCOPES)
-        }
+        try:
+            flow.fetch_token(code=code)
+            credentials = flow.credentials
+            
+            print(f"Token exchange successful!")
+            
+            return {
+                'access_token': credentials.token,
+                'refresh_token': credentials.refresh_token,
+                'expires_in': 3600,  # Default to 1 hour
+                'token_type': 'Bearer',
+                'scope': ' '.join(SCOPES)
+            }
+        except Exception as e:
+            print(f"Token exchange failed: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
     
-    def get_service(self, access_token: str, refresh_token: Optional[str] = None):
+    def get_service(self, access_token: str, refresh_token: Optional[str] = None, expires_at: Optional[str] = None):
         """
         Create authenticated Google Classroom service
         
         Args:
             access_token: OAuth access token
             refresh_token: OAuth refresh token for token renewal
+            expires_at: Token expiration timestamp (ISO format)
             
         Returns:
             Google Classroom service object
         """
+        # Parse expiry datetime if provided
+        expiry = None
+        if expires_at:
+            try:
+                expiry = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+            except:
+                pass
+        
         credentials = Credentials(
             token=access_token,
             refresh_token=refresh_token,
             token_uri='https://oauth2.googleapis.com/token',
             client_id=self._get_client_id(),
             client_secret=self._get_client_secret(),
-            scopes=SCOPES
+            scopes=SCOPES,
+            expiry=expiry
         )
         
         # Refresh token if expired
         if credentials.expired and credentials.refresh_token:
-            credentials.refresh(Request())
+            try:
+                credentials.refresh(Request())
+                print(f"Token refreshed successfully. New expiry: {credentials.expiry}")
+            except Exception as e:
+                print(f"Failed to refresh token: {e}")
+                raise
         
         service = build('classroom', 'v1', credentials=credentials)
         return service
@@ -133,29 +185,40 @@ class GoogleClassroomService:
             secrets = json.load(f)
             return secrets['web']['client_secret']
     
-    async def fetch_courses(self, access_token: str, refresh_token: Optional[str] = None) -> List[GoogleClassroomCourse]:
+    async def fetch_courses(self, access_token: str, refresh_token: Optional[str] = None, expires_at: Optional[str] = None) -> List[GoogleClassroomCourse]:
         """
-        Fetch all courses from Google Classroom
+        Fetch all courses for authenticated user
         
         Args:
             access_token: OAuth access token
             refresh_token: OAuth refresh token
+            expires_at: Token expiration timestamp
             
         Returns:
             List of GoogleClassroomCourse objects
         """
         try:
-            service = self.get_service(access_token, refresh_token)
+            print(f"Fetching courses - expires_at: {expires_at}")
+            service = self.get_service(access_token, refresh_token, expires_at)
+            print("Service created successfully")
             results = service.courses().list(pageSize=100).execute()
+            print(f"API call successful - fetched {len(results.get('courses', []))} courses")
             courses = results.get('courses', [])
             
             return [GoogleClassroomCourse(**course) for course in courses]
         
         except HttpError as error:
-            print(f'An error occurred: {error}')
+            print(f'HTTP error occurred while fetching courses: {error}')
+            import traceback
+            traceback.print_exc()
             return []
+        except Exception as e:
+            print(f'Unexpected error fetching courses: {e}')
+            import traceback
+            traceback.print_exc()
+            raise
     
-    async def fetch_course_by_id(self, course_id: str, access_token: str, refresh_token: Optional[str] = None) -> Optional[GoogleClassroomCourse]:
+    async def fetch_course_by_id(self, course_id: str, access_token: str, refresh_token: Optional[str] = None, expires_at: Optional[str] = None) -> Optional[GoogleClassroomCourse]:
         """
         Fetch a specific course by ID
         
@@ -163,12 +226,13 @@ class GoogleClassroomService:
             course_id: Google Classroom course ID
             access_token: OAuth access token
             refresh_token: OAuth refresh token
+            expires_at: Token expiration timestamp
             
         Returns:
             GoogleClassroomCourse object or None
         """
         try:
-            service = self.get_service(access_token, refresh_token)
+            service = self.get_service(access_token, refresh_token, expires_at)
             course = service.courses().get(id=course_id).execute()
             
             return GoogleClassroomCourse(**course)
@@ -177,7 +241,7 @@ class GoogleClassroomService:
             print(f'An error occurred: {error}')
             return None
     
-    async def fetch_coursework(self, course_id: str, access_token: str, refresh_token: Optional[str] = None) -> List[GoogleClassroomCourseWork]:
+    async def fetch_coursework(self, course_id: str, access_token: str, refresh_token: Optional[str] = None, expires_at: Optional[str] = None) -> List[GoogleClassroomCourseWork]:
         """
         Fetch all coursework (assignments) for a course
         
@@ -185,12 +249,13 @@ class GoogleClassroomService:
             course_id: Google Classroom course ID
             access_token: OAuth access token
             refresh_token: OAuth refresh token
+            expires_at: Token expiration timestamp
             
         Returns:
             List of GoogleClassroomCourseWork objects
         """
         try:
-            service = self.get_service(access_token, refresh_token)
+            service = self.get_service(access_token, refresh_token, expires_at)
             results = service.courses().courseWork().list(courseId=course_id, pageSize=100).execute()
             coursework = results.get('courseWork', [])
             
@@ -200,21 +265,22 @@ class GoogleClassroomService:
             print(f'An error occurred: {error}')
             return []
     
-    async def fetch_coursework_by_id(self, course_id: str, coursework_id: str, access_token: str, refresh_token: Optional[str] = None) -> Optional[GoogleClassroomCourseWork]:
+    async def fetch_coursework_by_id(self, course_id: str, coursework_id: str, access_token: str, refresh_token: Optional[str] = None, expires_at: Optional[str] = None) -> Optional[GoogleClassroomCourseWork]:
         """
-        Fetch a specific coursework by ID
+        Fetch specific coursework by ID
         
         Args:
             course_id: Google Classroom course ID
             coursework_id: Coursework ID
             access_token: OAuth access token
             refresh_token: OAuth refresh token
+            expires_at: Token expiration timestamp
             
         Returns:
             GoogleClassroomCourseWork object or None
         """
         try:
-            service = self.get_service(access_token, refresh_token)
+            service = self.get_service(access_token, refresh_token, expires_at)
             coursework = service.courses().courseWork().get(
                 courseId=course_id,
                 id=coursework_id

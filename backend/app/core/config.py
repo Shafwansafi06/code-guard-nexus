@@ -1,8 +1,12 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
+import os
 
 
 class Settings(BaseSettings):
+    # Environment
+    ENVIRONMENT: str = "development"
+    
     # Supabase
     SUPABASE_URL: str
     SUPABASE_KEY: str
@@ -21,9 +25,27 @@ class Settings(BaseSettings):
     
     # Google
     GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
     GOOGLE_API_KEY: Optional[str] = None
     GOOGLE_CLIENT_SECRETS_FILE: Optional[str] = "client_secret.json"
     GOOGLE_OAUTH_REDIRECT_URI: Optional[str] = "http://localhost:5173/auth/google/callback"
+    
+    # ML Models
+    MODEL_PATH: str = "./models"
+    ENABLE_GPU: bool = False
+    MODEL_CACHE_SIZE: int = 100
+    
+    # Rate Limiting
+    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_HOUR: int = 1000
+    
+    # Logging
+    LOG_LEVEL: str = "INFO"
+    LOG_FORMAT: str = "text"  # or "json" for production
+    
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT == "production"
     
     @property
     def allowed_origins_list(self) -> List[str]:

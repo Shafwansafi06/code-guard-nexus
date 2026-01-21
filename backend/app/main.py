@@ -81,6 +81,31 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    return {
+        "status": "healthy",
+        "service": "codeguard-nexus-api",
+        "version": "1.0.0"
+    }
+
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check - verifies service can handle requests"""
+    try:
+        # Test database connection
+        from app.core.database import get_supabase_admin
+        supabase = get_supabase_admin()
+        # Simple query to verify connection
+        supabase.table('users').select('id').limit(1).execute()
+        return {"status": "ready"}
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=503, detail=f"Service not ready: {str(e)}")
+
+
+@app.get("/health")
+async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
 

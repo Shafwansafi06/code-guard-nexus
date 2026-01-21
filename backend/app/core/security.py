@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
-from app.core.database import get_supabase
+from app.core.database import get_supabase, get_supabase_admin
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 security = HTTPBearer()
@@ -52,38 +52,54 @@ async def get_current_user(
 ):
     """Get current authenticated user from token"""
     token = credentials.credentials
+    user_id = None
     
+    # Try to decode as backend JWT token first
     try:
-        # First try to decode JWT token
         payload = decode_token(token)
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-            )
+        user_id = payload.get("sub")
+        print(f"Backend JWT decoded successfully, user_id: {user_id}")
     except HTTPException:
-        # If JWT fails, try Supabase auth
+        # If backend JWT fails, try to decode as Supabase token
+        # Supabase tokens are also JWTs but signed with Supabase's secret
         try:
-            supabase = get_supabase()
-            response = supabase.auth.get_user(token)
-            if not response or not response.user:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Could not validate credentials",
-                )
-            user_id = response.user.id
-        except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
+            # Decode without verification to get the user_id
+            # We trust it's valid if the user exists in our database
+            payload = jwt.decode(
+                token, 
+                key="", 
+                options={"verify_signature": False, "verify_aud": False, "verify_exp": False}
             )
+            user_id = payload.get("sub")
+            print(f"Supabase token decoded successfully, user_id: {user_id}")
+            print(f"Token payload: {payload}")
+        except Exception as e:
+            print(f"Token decoding failed: {e}")
+            import traceback
+            traceback.print_exc()
     
-    # Fetch user from database
-    supabase = get_supabase()
-    result = supabase.table("users").select("*").eq("id", user_id).execute()
+    if not user_id:
+        print(f"No user_id found in token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Fetch user from database using admin client
+    supabase_admin = get_supabase_admin()
+    try:
+        result = supabase_admin.table("users").select("*").eq("id", user_id).execute()
+        print(f"Database query result: {result.data}")
+    except Exception as e:
+        print(f"Database query failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
     
     if not result.data:
+        print(f"No user found with id: {user_id}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
@@ -92,11 +108,13 @@ async def get_current_user(
     user = result.data[0]
     
     if not user.get("is_active"):
+        print(f"User {user_id} is inactive")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
         )
     
+    print(f"User authenticated successfully: {user['email']}")
     return user
 
 

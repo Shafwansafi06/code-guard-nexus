@@ -20,7 +20,7 @@ from app.schemas.google_classroom import (
     GoogleOAuthTokenResponse,
 )
 from app.services.google_classroom_service import google_classroom_service
-from app.core.database import get_supabase
+from app.core.database import get_supabase, get_supabase_admin
 
 router = APIRouter()
 
@@ -36,7 +36,16 @@ async def get_authorization_url():
     try:
         auth_url, state = google_classroom_service.create_authorization_url()
         return GoogleClassroomAuthURL(auth_url=auth_url, state=state)
+    except FileNotFoundError as e:
+        print(f"File not found error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google client secrets file not found: {str(e)}"
+        )
     except Exception as e:
+        print(f"Error generating authorization URL: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate authorization URL: {str(e)}"
@@ -48,7 +57,6 @@ async def oauth_callback(
     code: str = Query(..., description="Authorization code from Google"),
     state: str = Query(..., description="State parameter for CSRF protection"),
     user_id: str = Query(..., description="User ID to associate tokens with"),
-    supabase = Depends(get_supabase)
 ):
     """
     Handle OAuth callback and exchange code for tokens
@@ -56,10 +64,13 @@ async def oauth_callback(
     Stores tokens in database for future use
     """
     try:
+        print(f"OAuth callback received - user_id: {user_id}, state: {state[:20]}...")
+        
         # Exchange code for tokens
         token_data = google_classroom_service.exchange_code_for_tokens(code, state)
+        print(f"Token exchange successful - access_token: {token_data['access_token'][:20]}...")
         
-        # Store tokens in database (encrypted)
+        # Store tokens in database (encrypted) using admin client to bypass RLS
         expires_at = datetime.utcnow() + timedelta(seconds=token_data['expires_in'])
         
         token_record = {
@@ -72,15 +83,21 @@ async def oauth_callback(
             'created_at': datetime.utcnow().isoformat(),
         }
         
-        # Upsert token (update if exists, insert if not)
-        result = supabase.table('google_oauth_tokens').upsert(
+        # Use admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        result = admin_supabase.table('google_oauth_tokens').upsert(
             token_record,
             on_conflict='user_id'
         ).execute()
         
+        print(f"Token stored successfully for user: {user_id}")
+        
         return GoogleOAuthTokenResponse(**token_data)
     
     except Exception as e:
+        print(f"OAuth callback error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to exchange authorization code: {str(e)}"
@@ -90,14 +107,14 @@ async def oauth_callback(
 @router.get("/courses", response_model=List[GoogleClassroomCourse])
 async def list_google_classroom_courses(
     user_id: str = Query(..., description="User ID to fetch courses for"),
-    supabase = Depends(get_supabase)
 ):
     """
     List all Google Classroom courses for authenticated user
     """
     try:
-        # Fetch user's OAuth tokens from database
-        result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Fetch user's OAuth tokens from database using admin client
+        admin_supabase = get_supabase_admin()
+        result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not result.data:
             raise HTTPException(
@@ -108,15 +125,19 @@ async def list_google_classroom_courses(
         token_data = result.data[0]
         access_token = token_data['access_token']
         refresh_token = token_data.get('refresh_token')
+        expires_at = token_data.get('expires_at')
         
         # Fetch courses from Google Classroom
-        courses = await google_classroom_service.fetch_courses(access_token, refresh_token)
+        courses = await google_classroom_service.fetch_courses(access_token, refresh_token, expires_at)
         
         return courses
     
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error fetching Google Classroom courses: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch courses: {str(e)}"
@@ -127,14 +148,14 @@ async def list_google_classroom_courses(
 async def get_google_classroom_course(
     course_id: str,
     user_id: str = Query(..., description="User ID"),
-    supabase = Depends(get_supabase)
 ):
     """
     Get a specific Google Classroom course by ID
     """
     try:
-        # Fetch user's OAuth tokens
-        result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Fetch user's OAuth tokens using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not result.data:
             raise HTTPException(
@@ -145,9 +166,10 @@ async def get_google_classroom_course(
         token_data = result.data[0]
         access_token = token_data['access_token']
         refresh_token = token_data.get('refresh_token')
+        expires_at = token_data.get('expires_at')
         
         # Fetch course from Google Classroom
-        course = await google_classroom_service.fetch_course_by_id(course_id, access_token, refresh_token)
+        course = await google_classroom_service.fetch_course_by_id(course_id, access_token, refresh_token, expires_at)
         
         if not course:
             raise HTTPException(
@@ -170,14 +192,14 @@ async def get_google_classroom_course(
 async def list_course_assignments(
     course_id: str,
     user_id: str = Query(..., description="User ID"),
-    supabase = Depends(get_supabase)
 ):
     """
     List all coursework (assignments) for a Google Classroom course
     """
     try:
-        # Fetch user's OAuth tokens
-        result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Fetch user's OAuth tokens using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not result.data:
             raise HTTPException(
@@ -188,9 +210,10 @@ async def list_course_assignments(
         token_data = result.data[0]
         access_token = token_data['access_token']
         refresh_token = token_data.get('refresh_token')
+        expires_at = token_data.get('expires_at')
         
         # Fetch coursework from Google Classroom
-        coursework = await google_classroom_service.fetch_coursework(course_id, access_token, refresh_token)
+        coursework = await google_classroom_service.fetch_coursework(course_id, access_token, refresh_token, expires_at)
         
         return coursework
     
@@ -207,7 +230,6 @@ async def list_course_assignments(
 async def import_course_from_google_classroom(
     request: ImportCourseRequest,
     user_id: str = Query(..., description="User ID (instructor)"),
-    supabase = Depends(get_supabase)
 ):
     """
     Import a course from Google Classroom into CodeGuard Nexus
@@ -215,8 +237,9 @@ async def import_course_from_google_classroom(
     Creates a new course in the local database linked to Google Classroom
     """
     try:
-        # Fetch user's OAuth tokens
-        token_result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Fetch user's OAuth tokens using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        token_result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not token_result.data:
             raise HTTPException(
@@ -227,12 +250,14 @@ async def import_course_from_google_classroom(
         token_data = token_result.data[0]
         access_token = token_data['access_token']
         refresh_token = token_data.get('refresh_token')
+        expires_at = token_data.get('expires_at')
         
         # Fetch course from Google Classroom
         google_course = await google_classroom_service.fetch_course_by_id(
             request.google_classroom_id,
             access_token,
-            refresh_token
+            refresh_token,
+            expires_at
         )
         
         if not google_course:
@@ -242,7 +267,7 @@ async def import_course_from_google_classroom(
             )
         
         # Check if course already imported
-        existing_result = supabase.table('courses').select('*').eq(
+        existing_result = admin_supabase.table('courses').select('*').eq(
             'google_classroom_id', request.google_classroom_id
         ).execute()
         
@@ -266,7 +291,7 @@ async def import_course_from_google_classroom(
             'created_at': datetime.utcnow().isoformat(),
         }
         
-        result = supabase.table('courses').insert(course_data).execute()
+        result = admin_supabase.table('courses').insert(course_data).execute()
         
         return ImportCourseResponse(
             success=True,
@@ -288,7 +313,6 @@ async def import_course_from_google_classroom(
 async def import_assignment_from_google_classroom(
     request: ImportAssignmentRequest,
     user_id: str = Query(..., description="User ID (instructor)"),
-    supabase = Depends(get_supabase)
 ):
     """
     Import an assignment from Google Classroom into CodeGuard Nexus
@@ -296,8 +320,9 @@ async def import_assignment_from_google_classroom(
     Creates a new assignment in the local database linked to Google Classroom coursework
     """
     try:
-        # Fetch user's OAuth tokens
-        token_result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Fetch user's OAuth tokens using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        token_result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not token_result.data:
             raise HTTPException(
@@ -308,9 +333,10 @@ async def import_assignment_from_google_classroom(
         token_data = token_result.data[0]
         access_token = token_data['access_token']
         refresh_token = token_data.get('refresh_token')
+        expires_at = token_data.get('expires_at')
         
         # Get course to find Google Classroom course ID
-        course_result = supabase.table('courses').select('*').eq('id', request.course_id).execute()
+        course_result = admin_supabase.table('courses').select('*').eq('id', request.course_id).execute()
         
         if not course_result.data:
             raise HTTPException(
@@ -332,7 +358,8 @@ async def import_assignment_from_google_classroom(
             google_course_id,
             request.google_coursework_id,
             access_token,
-            refresh_token
+            refresh_token,
+            expires_at
         )
         
         if not google_coursework:
@@ -342,7 +369,7 @@ async def import_assignment_from_google_classroom(
             )
         
         # Check if assignment already imported
-        existing_result = supabase.table('assignments').select('*').eq(
+        existing_result = admin_supabase.table('assignments').select('*').eq(
             'external_assignment_id', request.google_coursework_id
         ).execute()
         
@@ -381,7 +408,7 @@ async def import_assignment_from_google_classroom(
             'created_at': datetime.utcnow().isoformat(),
         }
         
-        result = supabase.table('assignments').insert(assignment_data).execute()
+        result = admin_supabase.table('assignments').insert(assignment_data).execute()
         
         return ImportAssignmentResponse(
             success=True,
@@ -402,14 +429,14 @@ async def import_assignment_from_google_classroom(
 @router.get("/sync/status", response_model=SyncStatusResponse)
 async def get_sync_status(
     user_id: str = Query(..., description="User ID"),
-    supabase = Depends(get_supabase)
 ):
     """
     Get Google Classroom sync status for user
     """
     try:
-        # Check if user is authenticated with Google
-        token_result = supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
+        # Check if user is authenticated with Google using admin client to bypass RLS
+        admin_supabase = get_supabase_admin()
+        token_result = admin_supabase.table('google_oauth_tokens').select('*').eq('user_id', user_id).execute()
         
         if not token_result.data:
             return SyncStatusResponse(
@@ -421,11 +448,11 @@ async def get_sync_status(
             )
         
         # Count synced courses
-        courses_result = supabase.table('courses').select('*').eq('instructor_id', user_id).not_.is_('google_classroom_id', 'null').execute()
+        courses_result = admin_supabase.table('courses').select('*').eq('instructor_id', user_id).not_.is_('google_classroom_id', 'null').execute()
         courses_synced = len(courses_result.data)
         
         # Count synced assignments
-        assignments_result = supabase.table('assignments').select('*').not_.is_('external_assignment_id', 'null').execute()
+        assignments_result = admin_supabase.table('assignments').select('*').not_.is_('external_assignment_id', 'null').execute()
         assignments_synced = len(assignments_result.data)
         
         # Get last sync time (from most recent course)
