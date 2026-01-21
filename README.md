@@ -13,7 +13,7 @@
 [![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Features](#-features) • [Architecture](#-system-architecture) • [Installation](#-installation) • [API](#-api-documentation) • [Database](#-database-schema)
+[Features](#-features) • [Architecture](#-system-architecture) • [Installation](#-installation) • [Deployment](#-deployment) • [API](#-api-documentation) • [Database](#-database-schema)
 
 </div>
 

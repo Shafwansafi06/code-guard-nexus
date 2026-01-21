@@ -41,3 +41,6 @@ htmlcov/
 
 # Logs
 *.log
+
+# Google OAuth Secrets
+client_secret*.json
