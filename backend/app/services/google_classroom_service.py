@@ -37,18 +37,24 @@ class GoogleClassroomService:
     """Service for interacting with Google Classroom API"""
     
     def __init__(self):
+        # Check if we have environment variables for OAuth config
+        self.client_id = os.getenv("GOOGLE_CLIENT_ID")
+        self.client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
+        
+        # Fall back to file-based config if env vars not set
         client_secrets_file = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
-        # Make path absolute if it's relative
         if not os.path.isabs(client_secrets_file):
-            # Assume it's relative to the backend directory
             backend_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
             self.client_secrets_file = os.path.join(backend_dir, client_secrets_file)
         else:
             self.client_secrets_file = client_secrets_file
         
-        # Verify file exists
-        if not os.path.exists(self.client_secrets_file):
-            print(f"WARNING: Google client secrets file not found at: {self.client_secrets_file}")
+        # Verify we have either env vars or file
+        has_env_config = self.client_id and self.client_secret
+        has_file_config = os.path.exists(self.client_secrets_file)
+        
+        if not has_env_config and not has_file_config:
+            print(f"WARNING: No Google OAuth config found. Set GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET or provide {self.client_secrets_file}")
     
     @property
     def redirect_uri(self):
@@ -62,19 +68,35 @@ class GoogleClassroomService:
         Returns:
             tuple: (authorization_url, state)
         """
-        if not os.path.exists(self.client_secrets_file):
-            raise FileNotFoundError(f"Google client secrets file not found: {self.client_secrets_file}")
-            
         if state is None:
             state = secrets.token_urlsafe(32)
         
         print(f"Creating OAuth URL with redirect_uri: {self.redirect_uri}")
         
-        flow = Flow.from_client_secrets_file(
-            self.client_secrets_file,
-            scopes=SCOPES,
-            redirect_uri=self.redirect_uri
-        )
+        # Use environment variables if available, otherwise use file
+        if self.client_id and self.client_secret:
+            client_config = {
+                "web": {
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [self.redirect_uri]
+                }
+            }
+            flow = Flow.from_client_config(
+                client_config,
+                scopes=SCOPES,
+                redirect_uri=self.redirect_uri
+            )
+        elif os.path.exists(self.client_secrets_file):
+            flow = Flow.from_client_secrets_file(
+                self.client_secrets_file,
+                scopes=SCOPES,
+                redirect_uri=self.redirect_uri
+            )
+        else:
+            raise FileNotFoundError(f"No Google OAuth config found. Set GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET environment variables or provide {self.client_secrets_file}")
         
         authorization_url, _ = flow.authorization_url(
             access_type='offline',
@@ -103,12 +125,30 @@ class GoogleClassroomService:
         os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
         os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Allow HTTP for local development
         
-        flow = Flow.from_client_secrets_file(
-            self.client_secrets_file,
-            scopes=SCOPES,
-            redirect_uri=self.redirect_uri,
-            state=state
-        )
+        # Use environment variables if available, otherwise use file
+        if self.client_id and self.client_secret:
+            client_config = {
+                "web": {
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [self.redirect_uri]
+                }
+            }
+            flow = Flow.from_client_config(
+                client_config,
+                scopes=SCOPES,
+                redirect_uri=self.redirect_uri,
+                state=state
+            )
+        else:
+            flow = Flow.from_client_secrets_file(
+                self.client_secrets_file,
+                scopes=SCOPES,
+                redirect_uri=self.redirect_uri,
+                state=state
+            )
         
         print(f"Exchanging code for tokens with redirect_uri: {self.redirect_uri}")
         
