@@ -38,13 +38,76 @@ CodeGuard Nexus is an advanced academic integrity monitoring system that helps e
 
 ## 🏗️ Architecture
 
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        A[React + TypeScript<br/>Vite + TailwindCSS<br/>shadcn/ui]
+    end
+    
+    subgraph "API Layer"
+        B[FastAPI Backend<br/>Python 3.13<br/>Render]
+    end
+    
+    subgraph "Database Layer"
+        C[Supabase<br/>PostgreSQL + Auth]
+    end
+    
+    subgraph "ML Layer"
+        D[HuggingFace Spaces<br/>ONNX Runtime<br/>CodeBERT Model]
+    end
+    
+    subgraph "External Services"
+        E[Google Classroom<br/>OAuth 2.0]
+    end
+    
+    A -->|REST API| B
+    B -->|SQL Queries| C
+    B -->|ML Requests| D
+    B -->|OAuth Flow| E
+    A -->|Authentication| C
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style B fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    style C fill:#10b981,stroke:#059669,color:#fff
+    style D fill:#f59e0b,stroke:#d97706,color:#fff
+    style E fill:#ef4444,stroke:#dc2626,color:#fff
 ```
-Frontend (Vercel)          Backend (Render)         ML API (HuggingFace)
-    ↓                           ↓                         ↓
-  React +                   FastAPI +                  ONNX Runtime
-  TypeScript                Python 3.13               CodeBERT Model
-  TailwindCSS               Supabase                  Docker Container
-  shadcn/ui                 PostgreSQL                Port 7860
+
+### System Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend API
+    participant DB as Supabase
+    participant ML as ML Service
+    participant GC as Google Classroom
+
+    U->>F: Login
+    F->>DB: Authenticate
+    DB-->>F: JWT Token
+    
+    U->>F: Upload Code Files
+    F->>B: POST /submissions/upload
+    B->>DB: Store Submission
+    B->>ML: POST /predict
+    ML-->>B: Similarity Score
+    B->>DB: Save Results
+    B-->>F: Analysis Complete
+    F-->>U: Display Results
+    
+    U->>F: Import from Classroom
+    F->>B: GET /google-classroom/auth/url
+    B-->>F: OAuth URL
+    F->>GC: Redirect to Google
+    GC-->>B: Callback with Code
+    B->>GC: Exchange for Tokens
+    GC-->>B: Access Token
+    B->>DB: Store Token
+    B->>GC: Fetch Courses
+    GC-->>B: Course Data
+    B-->>F: Courses List
 ```
 
 ## 🚀 Quick Start
@@ -126,6 +189,34 @@ bun dev
 ```
 
 Visit `http://localhost:5173`
+
+## 🎯 User Journey
+
+```mermaid
+journey
+    title Instructor's Journey with CodeGuard Nexus
+    section Onboarding
+      Sign up with email: 5: Instructor
+      Complete profile setup: 5: Instructor
+      Import Google Classroom: 4: Instructor
+    section Assignment Management
+      Create assignment: 5: Instructor
+      Set plagiarism threshold: 4: Instructor
+      Upload student submissions: 5: Instructor
+    section Analysis
+      Run plagiarism detection: 5: System
+      AI code detection: 5: System
+      Generate similarity scores: 5: System
+    section Review
+      View results dashboard: 5: Instructor
+      Check flagged submissions: 4: Instructor
+      Review similarity network: 4: Instructor
+      Export report: 5: Instructor
+    section Action
+      Contact students: 3: Instructor
+      Document evidence: 4: Instructor
+      Update grade: 4: Instructor
+```
 
 ## 📦 Deployment
 
@@ -218,15 +309,169 @@ Automatically detects **30+ programming languages** including:
 
 ## 📊 Database Schema
 
-### Users Table
-- `id` (UUID, primary key)
-- `email`, `username`, `password_hash`
-- `full_name`, `subject`, `institution`
-- `student_count`, `expected_submissions`
-- `onboarding_completed`, `role`, `is_active`
+```mermaid
+erDiagram
+    USERS ||--o{ COURSES : creates
+    USERS ||--o{ GOOGLE_OAUTH_TOKENS : has
+    COURSES ||--o{ ASSIGNMENTS : contains
+    ASSIGNMENTS ||--o{ SUBMISSIONS : receives
+    SUBMISSIONS ||--o{ FILES : includes
+    SUBMISSIONS ||--o{ ANALYSIS_RESULTS : generates
+    ASSIGNMENTS ||--o{ COMPARISON_PAIRS : analyzes
+    USERS ||--o{ ORGANIZATIONS : belongs_to
 
-### Courses, Assignments, Submissions, Files, Results
-See `backend/app/models/__init__.py` for complete schema
+    USERS {
+        uuid id PK
+        string email UK
+        string username
+        string password_hash
+        string full_name
+        string subject
+        string institution
+        int student_count
+        int expected_submissions
+        boolean onboarding_completed
+        enum role
+        boolean is_active
+        timestamp created_at
+    }
+    
+    COURSES {
+        uuid id PK
+        string name
+        string code
+        string semester
+        uuid instructor_id FK
+        timestamp created_at
+    }
+    
+    ASSIGNMENTS {
+        uuid id PK
+        string name
+        uuid course_id FK
+        timestamp due_date
+        json settings
+        enum status
+        timestamp created_at
+    }
+    
+    SUBMISSIONS {
+        uuid id PK
+        uuid assignment_id FK
+        string student_identifier
+        int file_count
+        enum status
+        timestamp created_at
+    }
+    
+    FILES {
+        uuid id PK
+        uuid submission_id FK
+        string filename
+        string language
+        string file_hash
+        text content
+    }
+    
+    ANALYSIS_RESULTS {
+        uuid id PK
+        uuid submission_id FK
+        float overall_similarity
+        float ai_detection_score
+        enum risk_level
+        json detailed_results
+    }
+    
+    GOOGLE_OAUTH_TOKENS {
+        uuid id PK
+        uuid user_id FK
+        string access_token
+        string refresh_token
+        timestamp expires_at
+    }
+```
+
+## 🔄 ML Detection Pipeline
+
+```mermaid
+flowchart TD
+    A[Code Submission] --> B{File Type}
+    B -->|Single File| C[Extract Code]
+    B -->|Multiple Files| D[Batch Processing]
+    
+    C --> E[Language Detection]
+    D --> E
+    
+    E --> F[Tokenization<br/>CodeBERT Tokenizer]
+    F --> G[ONNX Model Inference<br/>microsoft/codebert-base]
+    
+    G --> H{Analysis Type}
+    H -->|Clone Detection| I[Similarity Scoring<br/>Cosine Similarity]
+    H -->|AI Detection| J[Pattern Analysis<br/>AI Probability]
+    
+    I --> K{Threshold Check}
+    K -->|>70%| L[High Risk]
+    K -->|50-70%| M[Medium Risk]
+    K -->|<50%| N[Low Risk]
+    
+    J --> O{AI Score}
+    O -->|>80%| P[AI Generated]
+    O -->|50-80%| Q[Possibly AI]
+    O -->|<50%| R[Human Written]
+    
+    L --> S[Generate Report]
+    M --> S
+    N --> S
+    P --> S
+    Q --> S
+    R --> S
+    
+    S --> T[Store Results in DB]
+    T --> U[Notify User]
+    
+    style A fill:#3b82f6
+    style G fill:#f59e0b
+    style L fill:#ef4444
+    style M fill:#f59e0b
+    style N fill:#10b981
+    style P fill:#ef4444
+    style R fill:#10b981
+```
+
+## 🔐 Authentication Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Landing
+    Landing --> Login: Click Login
+    Landing --> Signup: Click Signup
+    
+    Login --> EmailAuth: Email/Password
+    Login --> GoogleAuth: Google OAuth
+    
+    EmailAuth --> Supabase: Authenticate
+    GoogleAuth --> Supabase: OAuth Flow
+    
+    Supabase --> Verified: Success
+    Supabase --> Login: Failed
+    
+    Signup --> NewUser: Register
+    NewUser --> Supabase: Create Account
+    Supabase --> Onboarding: First Login
+    
+    Onboarding --> ProfileSetup: Step 1
+    ProfileSetup --> ClassDetails: Step 2
+    ClassDetails --> Dashboard: Complete
+    
+    Verified --> Dashboard: Has Profile
+    
+    Dashboard --> ForgotPassword: Reset Password
+    ForgotPassword --> EmailSent: Send OTP
+    EmailSent --> ResetPassword: Enter Code
+    ResetPassword --> Login: Password Updated
+    
+    Dashboard --> [*]: Logout
+```
 
 ## 🤝 Contributing
 
