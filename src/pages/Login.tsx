@@ -344,7 +344,13 @@ export default function Login() {
             </form>
           )}
 
-          <p className="text-center text-muted-foreground mt-8">
+          <p className="text-center text-muted-foreground mt-6">
+            <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+              Forgot your password?
+            </Link>
+          </p>
+
+          <p className="text-center text-muted-foreground mt-4">
             Don't have an account?{' '}
             <Link to="/signup" className="text-primary hover:underline font-medium">
               Sign up free

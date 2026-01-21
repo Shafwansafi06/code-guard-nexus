@@ -1,990 +1,263 @@
 # CodeGuard Nexus 🛡️
 
-<div align="center">
+> **AI-Powered Code Plagiarism Detection & Academic Integrity Platform**
 
-![CodeGuard Nexus Banner](https://img.shields.io/badge/CodeGuard-Nexus-00F0FF?style=for-the-badge&logo=shield&logoColor=white)
+CodeGuard Nexus is an advanced academic integrity monitoring system that helps educators detect plagiarism, AI-generated code, and maintain code quality standards using machine learning.
 
-**Enterprise-Grade Academic Integrity Platform with AI Detection**
+## ✨ Features
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com/)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+### 🔍 **Advanced Detection**
+- **Code Plagiarism Detection**: Uses CodeBERT ML model with 96% accuracy (ONNX-optimized)
+- **AI Code Detection**: Identifies AI-generated code submissions
+- **Cross-Language Support**: Detects plagiarism across different programming languages
+- **Auto Language Detection**: Automatically identifies programming languages from code and file extensions
 
-[Features](#-features) • [Architecture](#-system-architecture) • [Installation](#-installation) • [Deployment](#-deployment) • [API](#-api-documentation) • [Database](#-database-schema)
+### 📊 **Smart Analysis**
+- **Batch Comparison**: Compare multiple submissions simultaneously
+- **Similarity Scoring**: Detailed similarity percentages with risk level classification
+- **Network Graph Visualization**: Visual representation of plagiarism clusters
+- **Real-time Dashboard**: Live metrics and analytics
 
-</div>
+### 🎓 **Google Classroom Integration**
+- **OAuth 2.0 Authentication**: Secure Google account integration
+- **Course Import**: Import courses directly from Google Classroom
+- **Assignment Sync**: Automatically fetch coursework and submissions
+- **Student Management**: Seamless roster synchronization
 
----
+### 👥 **User Experience**
+- **Onboarding Flow**: Guided setup for new users
+- **Profile Management**: Track student count, subject, and submission volume
+- **History Tracking**: Complete audit trail of all scans
+- **Dark/Light Mode**: Beautiful UI with theme support
 
-## 📋 Table of Contents
+### 🔐 **Authentication & Security**
+- **Supabase Auth**: Secure authentication with email/password
+- **Google OAuth**: Social login integration
+- **Password Reset**: Forgot password feature with OTP verification
+- **Role-Based Access**: Instructor, student, and admin roles
 
-- [Overview](#-overview)
-- [System Architecture](#-system-architecture)
-- [Technology Stack](#-technology-stack)
-- [Database Schema](#-database-schema)
-- [Features](#-features)
-- [Installation](#-installation)
-- [Configuration](#-configuration)
-- [API Documentation](#-api-documentation)
-- [Development](#-development)
-- [Deployment](#-deployment)
-- [Security](#-security)
+## 🏗️ Architecture
 
----
-
-## 🎯 Overview
-
-**CodeGuard Nexus** is a professional-grade plagiarism detection and code similarity analysis platform designed for academic institutions. It combines advanced algorithms, machine learning models, and network graph analysis to provide educators with comprehensive insights into code submissions, collaboration patterns, and academic integrity violations.
-
-### Key Capabilities
-
-- 🔍 **Multi-Algorithm Detection**: AST analysis, token-based comparison, and ML models
-- 🤖 **Advanced AI Code Detection**: Multi-method detection system with pattern matching, entropy analysis, naming conventions, code structure analysis, and ML integration
-- 📊 **Network Visualization**: Interactive D3.js graphs showing collaboration patterns
-- ⚡ **High Performance**: Process 1000+ submissions with optimized algorithms
-- 🔐 **Enterprise Security**: Supabase backend with RLS and JWT authentication
-- 🎨 **Modern UI/UX**: React + TailwindCSS with shadcn/ui components
-- 🎓 **Google Classroom Integration**: Import courses and assignments directly from Google Classroom
-- 🔑 **Multiple Auth Methods**: Email/Password, Google OAuth 2.0, Phone OTP (SMS verification)
-
----
-
-## 🏗️ System Architecture
-
-### High-Level Architecture
-
-```mermaid
-graph TB
-    subgraph "Frontend Layer"
-        A[React Web App<br/>Vite + TypeScript]
-        A1[Shadcn UI Components]
-        A2[D3.js Visualizations]
-        A3[Supabase Client]
-    end
-    
-    subgraph "Authentication Layer"
-        B[Supabase Auth<br/>JWT + OAuth]
-        B1[Row Level Security]
-    end
-    
-    subgraph "Backend API Layer"
-        C[FastAPI Application<br/>Python 3.11+]
-        C1[REST Endpoints]
-        C2[File Upload Handler]
-        C3[Analysis Orchestrator]
-    end
-    
-    subgraph "Analysis Engine"
-        D[Similarity Detector]
-        E[AI Detection Service]
-        F[Network Analyzer]
-        G[Report Generator]
-    end
-    
-    subgraph "Database Layer"
-        H[(Supabase PostgreSQL)]
-        H1[Organizations]
-        H2[Users & Auth]
-        H3[Courses & Assignments]
-        H4[Submissions & Files]
-        H5[Analysis Results]
-        H6[Comparison Pairs]
-    end
-    
-    subgraph "Storage Layer"
-        I[Supabase Storage<br/>File Objects]
-        J[Local Storage<br/>Processing Cache]
-    end
-    
-    A --> A1
-    A --> A2
-    A --> A3
-    A3 --> B
-    A --> C1
-    
-    C --> C1
-    C --> C2
-    C --> C3
-    C3 --> D
-    C3 --> E
-    C3 --> F
-    C3 --> G
-    
-    C --> H
-    B --> H2
-    H --> H1
-    H --> H2
-    H --> H3
-    H --> H4
-    H --> H5
-    H --> H6
-    
-    C2 --> I
-    C2 --> J
-    D --> J
-    E --> J
-    
-    style A fill:#00F0FF,stroke:#00A8CC,stroke-width:3px
-    style C fill:#B24BF3,stroke:#8B3CB3,stroke-width:3px
-    style H fill:#2ECC71,stroke:#27AE60,stroke-width:3px
-    style B fill:#FF6B6B,stroke:#CC5555,stroke-width:3px
+```
+Frontend (Vercel)          Backend (Render)         ML API (HuggingFace)
+    ↓                           ↓                         ↓
+  React +                   FastAPI +                  ONNX Runtime
+  TypeScript                Python 3.13               CodeBERT Model
+  TailwindCSS               Supabase                  Docker Container
+  shadcn/ui                 PostgreSQL                Port 7860
 ```
 
-### Request Flow Architecture
-
-```mermaid
-sequenceDiagram
-    participant U as User/Instructor
-    participant F as React Frontend
-    participant A as Supabase Auth
-    participant API as FastAPI Backend
-    participant E as Analysis Engine
-    participant DB as Supabase DB
-    participant S as Storage
-    
-    U->>F: Login
-    F->>A: signInWithPassword()
-    A->>DB: Verify Credentials
-    DB-->>A: User Data
-    A-->>F: JWT Token + Session
-    F-->>U: Dashboard
-
-    U->>F: Upload Submissions
-    F->>API: POST /submissions/upload<br/>[Bearer Token]
-    API->>A: Verify JWT Token
-    A-->>API: User Identity
-    API->>DB: Create Submission Record
-    API->>S: Store Files
-    S-->>API: File URLs
-    API->>E: Queue Analysis Task
-    API-->>F: 201 Created + Submission ID
-    
-    E->>S: Fetch Files
-    E->>E: Run Similarity Analysis
-    E->>E: AI Detection
-    E->>E: Network Analysis
-    E->>DB: Store Results
-    E->>DB: Create Comparison Pairs
-    E-->>F: WebSocket Update (optional)
-    
-    F->>API: GET /assignments/{id}
-    API->>DB: Fetch Assignment + Stats
-    DB-->>API: Data with Analytics
-    API-->>F: JSON Response
-    F-->>U: Display Results
-```
-
-### Component Architecture
-
-```mermaid
-graph LR
-    subgraph "React Application"
-        R[Router<br/>React Router v6]
-        R --> L[Landing Page]
-        R --> D[Dashboard]
-        R --> C[Courses]
-        R --> AS[Assignments]
-        R --> AN[Analysis View]
-        R --> CO[Comparison View]
-        
-        D --> DC[Dashboard Components]
-        DC --> ST[StatCard]
-        DC --> NG[NetworkGraph]
-        DC --> SP[SimilarityPairCard]
-        
-        AN --> AC[Analysis Components]
-        AC --> UZ[UploadZone]
-        AC --> AO[AdvancedOptions]
-        
-        CO --> CC[Comparison Components]
-        CC --> CD[CodeComparison]
-        CC --> DV[DiffViewer]
-    end
-    
-    subgraph "Services Layer"
-        SV[Services]
-        SV --> AU[Auth Service]
-        SV --> AP[API Client]
-        SV --> SU[Supabase Client]
-    end
-    
-    subgraph "State Management"
-        CTX[Context API]
-        CTX --> AUC[AuthContext]
-        CTX --> TC[ThemeContext]
-    end
-    
-    R --> SV
-    DC --> SV
-    AC --> SV
-    CC --> SV
-    
-    R --> CTX
-    DC --> CTX
-    
-    style R fill:#00F0FF,stroke:#00A8CC,stroke-width:2px
-    style SV fill:#B24BF3,stroke:#8B3CB3,stroke-width:2px
-    style CTX fill:#FF6B6B,stroke:#CC5555,stroke-width:2px
-```
-
----
-
-## 🗄️ Database Schema
-
-### Entity Relationship Diagram
-
-```mermaid
-erDiagram
-    ORGANIZATIONS ||--o{ USERS : has
-    USERS ||--o{ COURSES : instructs
-    COURSES ||--o{ ASSIGNMENTS : contains
-    ASSIGNMENTS ||--o{ SUBMISSIONS : receives
-    SUBMISSIONS ||--o{ FILES : includes
-    SUBMISSIONS ||--o| ANALYSIS_RESULTS : has
-    ASSIGNMENTS ||--o{ COMPARISON_PAIRS : generates
-    SUBMISSIONS ||--o{ COMPARISON_PAIRS : "compared in"
-    
-    ORGANIZATIONS {
-        uuid id PK
-        text name
-        text subscription_tier
-        jsonb features
-    }
-    
-    USERS {
-        uuid id PK
-        text email UK
-        text username UK
-        text password_hash
-        text role
-        uuid organization_id FK
-        boolean is_active
-        timestamptz created_at
-    }
-    
-    COURSES {
-        uuid id PK
-        text name
-        text code
-        text semester
-        uuid instructor_id FK
-    }
-    
-    ASSIGNMENTS {
-        uuid id PK
-        text name
-        uuid course_id FK
-        timestamptz due_date
-        jsonb settings
-        text status
-    }
-    
-    SUBMISSIONS {
-        uuid id PK
-        uuid assignment_id FK
-        text student_identifier
-        integer file_count
-        text status
-        timestamptz submission_time
-    }
-    
-    FILES {
-        uuid id PK
-        uuid submission_id FK
-        text filename
-        text language
-        text file_hash
-    }
-    
-    ANALYSIS_RESULTS {
-        uuid id PK
-        uuid submission_id FK
-        numeric overall_similarity
-        numeric ai_detection_score
-        text risk_level
-        jsonb detailed_results
-    }
-    
-    COMPARISON_PAIRS {
-        uuid id PK
-        uuid assignment_id FK
-        uuid submission_a_id FK
-        uuid submission_b_id FK
-        numeric similarity_score
-        text status
-    }
-```
-
-### Table Descriptions
-
-#### Organizations
-Stores institution/organization data with subscription tiers and feature flags.
-
-#### Users
-User accounts with role-based access control (admin, instructor, student). Integrates with Supabase Auth.
-
-#### Courses
-Course information managed by instructors. Links to assignments and student rosters.
-
-#### Assignments
-Programming assignments with configurable analysis settings and due dates.
-
-#### Submissions
-Student code submissions with file tracking and processing status.
-
-#### Files
-Individual code files within submissions, with language detection and hash for deduplication.
-
-#### Analysis Results
-Comprehensive analysis results including similarity scores, AI detection, and risk levels.
-
-#### Comparison Pairs
-Pairwise similarity comparisons between submissions within an assignment.
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: TailwindCSS + shadcn/ui
-- **State Management**: React Context API
-- **Routing**: React Router v6
-- **Data Visualization**: D3.js, Recharts
-- **HTTP Client**: Axios
-- **Authentication**: Supabase Auth Client (Email/Password, Google OAuth, Phone OTP)
-
-### Backend
-- **Framework**: FastAPI (Python 3.11+)
-- **Authentication**: JWT + Supabase Auth (Email, Google OAuth, Phone OTP)
-- **Database**: Supabase (PostgreSQL 15)
-- **ORM**: Supabase Python Client
-- **File Storage**: Supabase Storage
-- **Validation**: Pydantic v2
-- **CORS**: FastAPI CORS Middleware
-- **OAuth Integration**: Google OAuth 2.0 for sign-in and Google Classroom
-
-### Analysis Engine
-- **Language Detection**: Pygments
-- **Code Parsing**: tree-sitter
-- **Similarity**: NLTK, scikit-learn
-- **AI Detection**: Advanced Multi-Method Detector with Pattern Matching, Entropy Analysis, Naming Conventions, Code Structure Analysis
-- **Machine Learning**: ONNX Runtime for inference (CPU/GPU optimized)
-- **Network Analysis**: NetworkX
-- **Report Generation**: ReportLab (PDF)
-
-### DevOps & Infrastructure
-- **Version Control**: Git + GitHub
-- **CI/CD**: GitHub Actions
-- **Containerization**: Docker + Docker Compose
-- **Monitoring**: Sentry (Error Tracking)
-- **Logging**: Python logging + Supabase Logs
-
----
-
-## 🚀 Features
-
-### For Instructors
-
-#### 📊 Dashboard Analytics
-- Real-time submission statistics
-- High-risk case alerts
-- Recent activity timeline
-- Course performance metrics
-
-#### 📚 Course Management
-- Create and organize courses
-- Multi-semester support
-- Assignment templates
-- Student roster management
-- **🎓 Google Classroom Import**: One-click course and assignment import
-
-#### 🔍 Assignment Analysis
-- Drag-and-drop file upload
-- Bulk submission processing
-- Configurable similarity thresholds
-- Language-specific analysis (10+ languages)
-
-#### 🎯 Detection Features
-- **Code Similarity**: Multi-algorithm comparison (lexical, syntactic, semantic)
-- **Advanced AI Detection**: 
-  - **6 Detection Methods**: Pattern matching, entropy analysis, naming conventions, code structure, error handling, comment analysis
-  - **High Accuracy**: 35% pattern weight, 50% detection threshold, 85%+ auto-flag for academic algorithms
-  - **Pattern Recognition**: Identifies academic code patterns, verbose comments, perfect structure
-  - **Entropy Analysis**: Distinguishes AI (4.0-4.5) from human code (4.5-5.5)
-  - **Naming Convention Analysis**: Detects AI-typical variable naming patterns
-- **ML-Powered Analysis**: ONNX model integration with 80% advanced detector weight
-- **Network Graph**: Visualize copying patterns and collaboration
-- **Side-by-Side Comparison**: Highlighted diff view with match scores
-
-#### 📈 Reporting
-- Comprehensive PDF reports
-- CSV export for further analysis
-- Evidence packages for integrity committees
-- Configurable report templates
-
-### For Administrators
-
-#### 🏢 Organization Management
-- Multi-tenant architecture
-- Role-based access control
-- Usage analytics
-- Subscription tier management
-
-#### 🔐 Security & Compliance
-- Row-level security (RLS)
-- JWT authentication
-- Encrypted data at rest
-- Audit logging
-
----
-
-## 📦 Installation
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+ and npm/bun
+- Python 3.13+
+- Supabase account
+- Git
 
-- **Node.js**: v18+ and npm/bun
-- **Python**: 3.11+
-- **Supabase Account**: Free tier available
-- **Git**: For version control
-- **Google Cloud Console** (Optional): For Google OAuth and Classroom integration
+### Installation
 
-### Frontend Setup
-
+1. **Clone the repository**
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/code-guard-nexus.git
+git clone https://github.com/Shafwansafi06/code-guard-nexus.git
 cd code-guard-nexus
+```
 
-# Install dependencies
+2. **Install frontend dependencies**
+```bash
 npm install
 # or
 bun install
+```
 
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your Supabase credentials
+3. **Install backend dependencies**
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-# Start development server
+4. **Set up environment variables**
+
+Create `backend/.env`:
+```env
+# Supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_anon_key
+SUPABASE_SERVICE_KEY=your_service_role_key
+
+# JWT
+SECRET_KEY=your_secret_key_here
+
+# Google OAuth (Optional)
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+GOOGLE_OAUTH_REDIRECT_URI=https://your-backend-url/api/v1/google-classroom/auth/callback
+FRONTEND_URL=https://your-frontend-url
+```
+
+Create `src/.env`:
+```env
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+5. **Run the database migration**
+```bash
+# Execute the SQL file in your Supabase SQL editor
+cat backend/database/migrations/add_user_profile_fields.sql
+```
+
+6. **Start the development servers**
+
+Backend:
+```bash
+cd backend
+uvicorn app.main:app --reload --port 8000
+```
+
+Frontend:
+```bash
 npm run dev
 # or
 bun dev
 ```
 
-### Backend Setup
+Visit `http://localhost:5173`
 
-```bash
-# Navigate to backend directory
-cd backend
+## 📦 Deployment
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+### Frontend (Vercel)
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main
 
-# Install dependencies
-pip install -r requirements.txt
+### Backend (Render)
+1. Create new Web Service on Render
+2. Connect GitHub repository
+3. Set build command: `pip install -r requirements.txt`
+4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Add environment variables
+6. Deploy
 
-# Install ML dependencies (for AI detection)
-pip install -r requirements-ml.txt
+### ML API (HuggingFace Spaces)
+Already deployed at: `https://shafwansafi06-code-clone-detector.hf.space`
 
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your Supabase credentials
+## 🔧 Tech Stack
 
-# Run development server
-uvicorn app.main:app --reload
-```
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for fast builds
+- **TailwindCSS** for styling
+- **shadcn/ui** component library
+- **Framer Motion** for animations
+- **Recharts** for data visualization
+- **React Query** for data fetching
 
-### Database Setup
+### Backend
+- **FastAPI** 0.115.0
+- **Python 3.13**
+- **Supabase** (PostgreSQL + Auth)
+- **Pydantic** for validation
+- **Google APIs** for Classroom integration
 
-1. **Create Supabase Project**
-   - Go to [supabase.com](https://supabase.com)
-   - Create a new project
-   - Copy your project URL and anon key
+### ML/AI
+- **CodeBERT** (microsoft/codebert-base)
+- **ONNX Runtime** 1.20.1 (2-3x faster inference)
+- **Transformers** library
+- **HuggingFace** for model hosting
 
-2. **Enable Authentication Providers**
-   - Go to Authentication → Providers in Supabase Dashboard
-   - Enable **Email** provider (default)
-   - Enable **Google** provider (add OAuth credentials from Google Cloud Console)
-   - Enable **Phone** provider (configure Twilio or MessageBird for SMS)
-
-3. **Run Database Migrations**
-   ```sql
-   -- Execute the SQL schema provided in database/schema.sql
-   -- Or use Supabase SQL Editor
-   ```
-
-4. **Configure Row Level Security (RLS)**
-   ```sql
-   -- Enable RLS on all tables
-   ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE courses ENABLE ROW LEVEL SECURITY;
-   -- ... (for all tables)
-   
-   -- Create policies (see database/policies.sql)
-   ```
-
----
-
-## 🎓 Google Classroom Integration
-
-CodeGuard Nexus seamlessly integrates with Google Classroom to streamline your workflow.
-
-### Features
-- ✅ OAuth 2.0 secure authentication
-- ✅ Import courses with one click
-- ✅ Import assignments automatically
-- ✅ View student rosters
-- ✅ Sync status tracking
-- ✅ Automatic token refresh
-
-### Quick Setup
-
-1. **Create Google Cloud Project** and enable Google Classroom API
-2. **Configure OAuth consent screen** with required scopes
-3. **Download credentials** and place in `backend/client_secret.json`
-4. **Run database migration**:
-   ```bash
-   psql $SUPABASE_DB_URL -f backend/database/migrations/google_classroom_integration.sql
-   ```
-5. **Update `.env`** file:
-   ```env
-   GOOGLE_CLIENT_SECRETS_FILE=client_secret.json
-   GOOGLE_OAUTH_REDIRECT_URI=http://localhost:5173/auth/google/callback
-   ```
-
-📖 **Full Setup Guide**: See [GOOGLE_CLASSROOM_SETUP.md](./GOOGLE_CLASSROOM_SETUP.md) for detailed instructions.
-
----
-
-## ⚙️ Configuration
-
-### Frontend Environment Variables
-
-```env
-# .env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_API_URL=http://localhost:8000/api/v1
-```
-
-### Backend Environment Variables
-
-```env
-# backend/.env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-
-API_V1_STR=/api/v1
-PROJECT_NAME=CodeGuard Nexus API
-DEBUG=True
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
-
-SECRET_KEY=your-super-secret-key-change-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Google OAuth and Classroom (Optional)
-GOOGLE_CLIENT_SECRETS_FILE=client_secret.json
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:5173/auth/google/callback
-```
-
----
-
-## 📚 API Documentation
+## 📚 API Endpoints
 
 ### Authentication
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login user
+- `POST /api/v1/auth/forgot-password` - Send reset code
+- `POST /api/v1/auth/reset-password` - Reset password with OTP
+- `GET /api/v1/auth/me` - Get current user
 
-#### Register
-```http
-POST /api/v1/auth/register
-Content-Type: application/json
-
-{
-  "email": "instructor@university.edu",
-  "username": "instructor",
-  "password": "SecurePassword123!",
-  "role": "instructor"
-}
-```
-
-#### Login
-```http
-POST /api/v1/auth/login
-Content-Type: application/json
-
-{
-  "email": "instructor@university.edu",
-  "password": "SecurePassword123!"
-}
-
-Response:
-{
-  "access_token": "eyJhbGc....",
-  "token_type": "bearer",
-  "user": {
-    "id": "uuid",
-    "email": "instructor@university.edu",
-    "role": "instructor"
-  }
-}
-```
-
-#### Get User by ID (for OAuth validation)
-```http
-GET /api/v1/auth/user/{user_id}
-
-Response:
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "username": "username",
-  "role": "instructor",
-  "is_active": true,
-  "created_at": "2024-01-01T00:00:00Z"
-}
-```
-
-### Google OAuth & Phone Authentication
-
-Frontend authentication utilities support:
-- **Google OAuth**: Sign in/up with Google account
-- **Phone OTP**: SMS verification for passwordless login
-- **Email/Password**: Traditional authentication
-
-See [src/lib/auth-providers.ts](src/lib/auth-providers.ts) for implementation details.
+### Profile
+- `GET /api/v1/profile/me` - Get user profile
+- `POST /api/v1/profile/setup` - Complete onboarding
+- `PUT /api/v1/profile/update` - Update profile
 
 ### Courses
-
-#### List Courses
-```http
-GET /api/v1/courses
-Authorization: Bearer {token}
-```
-
-#### Create Course
-```http
-POST /api/v1/courses
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "name": "CS 101 - Introduction to Programming",
-  "code": "CS101",
-  "semester": "Fall 2024"
-}
-```
+- `GET /api/v1/courses` - List courses
+- `POST /api/v1/courses` - Create course
+- `GET /api/v1/courses/{id}` - Get course details
 
 ### Assignments
-
-#### Create Assignment
-```http
-POST /api/v1/assignments
-Authorization: Bearer {token}
-Content-Type: application/json
-
-{
-  "name": "Assignment 1: Hello World",
-  "course_id": "course-uuid",
-  "due_date": "2024-02-15T23:59:59Z",
-  "settings": {
-    "similarity_threshold": 0.7,
-    "enable_ai_detection": true
-  },
-  "status": "active"
-}
-```
-
-#### Start Analysis
-```http
-POST /api/v1/assignments/{assignment_id}/start-analysis
-Authorization: Bearer {token}
-
-Response:
-{
-  "message": "Analysis started",
-  "assignment_id": "uuid",
-  "submission_count": 45,
-  "comparison_pairs_created": 990
-}
-```
+- `GET /api/v1/assignments` - List assignments
+- `POST /api/v1/assignments` - Create assignment
+- `GET /api/v1/assignments/{id}/results` - Get results
 
 ### Submissions
+- `POST /api/v1/submissions/upload` - Upload files
+- `GET /api/v1/submissions/{id}` - Get submission
 
-#### Upload Submissions
-```http
-POST /api/v1/submissions/upload
-Authorization: Bearer {token}
-Content-Type: multipart/form-data
+### ML Analysis
+- `POST /api/v1/ml/detect-clone` - Detect code similarity
+- `POST /api/v1/ml/detect-ai` - Detect AI-generated code
+- `POST /api/v1/ml/batch-clone` - Batch comparison
 
-assignment_id: uuid
-student_identifier: student123
-files: [File, File, ...]
+### Google Classroom
+- `GET /api/v1/google-classroom/auth/url` - Get OAuth URL
+- `GET /api/v1/google-classroom/auth/callback` - OAuth callback
+- `GET /api/v1/google-classroom/courses` - List courses
+- `POST /api/v1/google-classroom/import-course` - Import course
 
-Response:
-{
-  "submission_id": "uuid",
-  "files_uploaded": 3,
-  "files": [...]
-}
-```
+## 🎨 Language Detection
 
-#### List Submissions
-```http
-GET /api/v1/submissions?assignment_id={uuid}
-Authorization: Bearer {token}
-```
+Automatically detects **30+ programming languages** including:
+- Python, JavaScript, TypeScript, Java, C++, C, C#
+- PHP, Ruby, Go, Rust, Swift, Kotlin, Scala
+- HTML, CSS, SQL, Shell, PowerShell
+- JSON, YAML, Markdown, and more
 
-### Comparisons
+## 📊 Database Schema
 
-#### Get High-Risk Comparisons
-```http
-GET /api/v1/comparisons/assignment/{assignment_id}/high-risk?threshold=0.7
-Authorization: Bearer {token}
+### Users Table
+- `id` (UUID, primary key)
+- `email`, `username`, `password_hash`
+- `full_name`, `subject`, `institution`
+- `student_count`, `expected_submissions`
+- `onboarding_completed`, `role`, `is_active`
 
-Response:
-[
-  {
-    "id": "uuid",
-    "assignment_id": "uuid",
-    "submission_a_id": "uuid",
-    "submission_b_id": "uuid",
-    "similarity_score": 0.95,
-    "status": "completed",
-    "submission_a": {...},
-    "submission_b": {...}
-  }
-]
-```
-
-### Dashboard
-
-#### Get Statistics
-```http
-GET /api/v1/dashboard/stats
-Authorization: Bearer {token}
-
-Response:
-{
-  "total_assignments": 12,
-  "total_submissions": 540,
-  "pending_reviews": 23,
-  "high_risk_cases": 8,
-  "recent_activity": [...]
-}
-```
-
-For complete API documentation, visit: `http://localhost:8000/api/v1/docs` (Swagger UI)
-
----
-
-## 🔧 Development
-
-### Project Structure
-
-```
-code-guard-nexus/
-├── src/                      # Frontend source
-│   ├── components/          # React components
-│   │   ├── ui/             # shadcn/ui components
-│   │   ├── dashboard/      # Dashboard components
-│   │   ├── comparison/     # Code comparison
-│   │   ├── google-classroom/ # Google Classroom integration
-│   │   └── upload/         # File upload
-│   ├── pages/              # Page components
-│   │   ├── Login.tsx       # Login with Email/Google/Phone
-│   │   ├── Signup.tsx      # Registration with OAuth
-│   │   ├── AuthCallback.tsx # OAuth redirect handler
-│   │   └── ...
-│   ├── lib/                # Utilities & services
-│   │   ├── supabase.ts    # Supabase client
-│   │   ├── auth.ts        # Auth service
-│   │   ├── auth-providers.ts # Google OAuth & Phone OTP
-│   │   ├── api.ts         # API client
-│   │   └── utils.ts       # Helpers
-│   ├── contexts/           # React contexts
-│   │   └── AuthContext.tsx # Auth state management
-│   ├── hooks/              # Custom hooks
-│   └── types/              # TypeScript types
-├── backend/                 # Backend source
-│   ├── app/
-│   │   ├── api/            # API endpoints
-│   │   │   ├── auth.py    # Auth with user validation
-│   │   │   ├── courses.py
-│   │   │   ├── assignments.py
-│   │   │   ├── submissions.py
-│   │   │   ├── comparisons.py
-│   │   │   ├── google_classroom.py # Google Classroom API
-│   │   │   └── dashboard.py
-│   │   ├── core/           # Core configuration
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   └── security.py
-│   │   ├── models/         # Data models
-│   │   ├── schemas/        # Pydantic schemas
-│   │   │   └── google_classroom.py # Google Classroom schemas
-│   │   ├── services/       # Business logic
-│   │   │   ├── advanced_ai_detector.py # Multi-method AI detection
-│   │   │   ├── inference.py # ML model inference with ONNX
-│   │   │   └── google_classroom_service.py
-│   │   └── main.py         # App entry point
-│   ├── requirements.txt    # Core dependencies
-│   ├── requirements-ml.txt # ML/AI dependencies
-│   └── .env
-├── public/                  # Static assets
-├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── README.md
-```
-
-### Running Tests
-
-```bash
-# Frontend tests
-npm test
-
-# Backend tests
-cd backend
-pytest
-```
-
-### Code Quality
-
-```bash
-# Frontend linting
-npm run lint
-
-# Backend linting
-cd backend
-flake8 app/
-black app/
-mypy app/
-```
-
----
-
-## 🚀 Deployment
-
-### Frontend Deployment (Vercel)
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel
-
-# Production deployment
-vercel --prod
-```
-
-### Backend Deployment (Railway/Render)
-
-```bash
-# Using Docker
-docker build -t codeguard-api ./backend
-docker run -p 8000:8000 codeguard-api
-
-# Or using Railway
-railway login
-railway init
-railway up
-```
-
-### Database (Supabase)
-
-Supabase provides managed PostgreSQL hosting with automatic backups, scaling, and monitoring.
-
----
-
-## 🔒 Security
-
-### Authentication Flow
-
-1. User registers/logs in via Supabase Auth
-2. Frontend receives JWT access token
-3. Token stored in memory (not localStorage for security)
-4. Token sent with all API requests via Authorization header
-5. Backend verifies token with Supabase
-6. Row Level Security enforces data access rules
-
-### Row Level Security Policies
-
-```sql
--- Users can only view their own data
-CREATE POLICY "Users can view own data"
-ON users FOR SELECT
-USING (auth.uid() = id);
-
--- Instructors can only manage their own courses
-CREATE POLICY "Instructors manage own courses"
-ON courses FOR ALL
-USING (auth.uid() = instructor_id);
-
--- Students can only view assignments from their courses
-CREATE POLICY "Students view course assignments"
-ON assignments FOR SELECT
-USING (
-  course_id IN (
-    SELECT course_id FROM enrollments
-    WHERE user_id = auth.uid()
-  )
-);
-```
-
-### Best Practices
-
-- ✅ Environment variables for secrets
-- ✅ JWT token expiration (30 minutes)
-- ✅ HTTPS only in production
-- ✅ CORS configured for specific origins
-- ✅ Rate limiting on API endpoints
-- ✅ Input validation with Pydantic
-- ✅ SQL injection prevention via ORM
-- ✅ XSS protection in React
-- ✅ CSRF tokens for state-changing operations
-
----
+### Courses, Assignments, Submissions, Files, Results
+See `backend/app/models/__init__.py` for complete schema
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-### Development Workflow
-
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
+## 📝 License
 
-## 📄 License
+This project is licensed under the MIT License.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 👤 Author
 
----
+**Shafwan Safi**
+- GitHub: [@Shafwansafi06](https://github.com/Shafwansafi06)
+- Email: shafwansafi06@gmail.com
 
 ## 🙏 Acknowledgments
 
-- Built with [FastAPI](https://fastapi.tiangolo.com/)
-- Powered by [Supabase](https://supabase.com/)
-- UI components from [shadcn/ui](https://ui.shadcn.com/)
-- Icons from [Lucide](https://lucide.dev/)
+- CodeBERT model by Microsoft
+- shadcn/ui component library
+- Supabase for backend infrastructure
+- HuggingFace for ML model hosting
+- FastAPI for backend framework
+
+## 📧 Support
+
+For support, email shafwansafi06@gmail.com or open an issue on GitHub.
 
 ---
 
-<div align="center">
-
-**Made with ❤️ for Educators**
-
-[Report Bug](https://github.com/yourusername/code-guard-nexus/issues) • [Request Feature](https://github.com/yourusername/code-guard-nexus/issues)
-
-</div>
+Made with ❤️ by Shafwan Safi

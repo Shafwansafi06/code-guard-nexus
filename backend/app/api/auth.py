@@ -5,8 +5,19 @@ from app.core.security import get_current_user, get_password_hash, create_access
 from app.schemas import (
     UserLogin, UserRegister, Token, UserResponse
 )
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
 
 
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
@@ -213,4 +224,67 @@ async def refresh_token(current_user: dict = Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Token refresh failed: {str(e)}"
+        )
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Send password reset email via Supabase"""
+    supabase = get_supabase()
+    
+    try:
+        # Send password reset email using Supabase Auth
+        supabase.auth.reset_password_email(request.email)
+        
+        return {
+            "message": "If an account with that email exists, a password reset link has been sent."
+        }
+    except Exception as e:
+        # Don't reveal if email exists or not (security best practice)
+        print(f"Password reset error: {e}")
+        return {
+            "message": "If an account with that email exists, a password reset link has been sent."
+        }
+
+
+@router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password using OTP code"""
+    supabase = get_supabase()
+    
+    try:
+        # Verify OTP and update password
+        auth_response = supabase.auth.verify_otp({
+            "email": request.email,
+            "token": request.otp,
+            "type": "recovery"
+        })
+        
+        if not auth_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired reset code"
+            )
+        
+        # Update the password
+        supabase.auth.update_user({
+            "password": request.new_password
+        })
+        
+        # Update password hash in database
+        admin_supabase = get_supabase_admin()
+        admin_supabase.table("users").update({
+            "password_hash": get_password_hash(request.new_password)
+        }).eq("email", request.email).execute()
+        
+        return {
+            "message": "Password reset successfully. You can now login with your new password."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Reset password error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Password reset failed: {str(e)}"
         )
