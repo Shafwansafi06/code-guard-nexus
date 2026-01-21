@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from typing import List, Optional
 from pydantic import BaseModel
 from app.core.security import get_current_user
-from app.services.inference import get_detector, CodeDetectorInference
+from app.services.hf_api_client import get_hf_client
+from app.services.advanced_ai_detector import get_advanced_detector
 from app.services.clone_detector import get_clone_detector, CloneDetectionService
 from app.services.onnx_clone_detector import get_onnx_detector, ONNXCloneDetector, ONNX_AVAILABLE
 import logging
@@ -96,7 +97,7 @@ async def detect_ai_generated_code(
     Returns AI likelihood score and classification
     """
     try:
-        detector = get_detector()
+        detector = get_advanced_detector()
         result = detector.detect_ai(request.code, request.language)
         
         # Add risk assessment
@@ -136,19 +137,19 @@ async def compute_similarity(
     request: SimilarityRequest
 ):
     """
-    Compute similarity between two code snippets
+    Compute similarity between two code snippets using HuggingFace API
     
     Returns similarity score (0-1) and suspicious flag
     """
     try:
-        detector = get_detector()
-        similarity = detector.compute_similarity(
+        hf_client = get_hf_client()
+        result = await hf_client.predict(
             request.code1,
             request.code2,
-            request.language1,
-            request.language2
+            threshold=0.7
         )
         
+        similarity = result.get("similarity_score", 0.0)
         threshold = 0.7
         is_suspicious = similarity >= threshold
         
@@ -171,12 +172,12 @@ async def analyze_code(
     request: CodeAnalysisRequest
 ):
     """
-    Comprehensive code analysis including AI detection and embeddings
+    Comprehensive code analysis including AI detection
     
     Returns full analysis with risk assessment
     """
     try:
-        detector = get_detector()
+        detector = get_advanced_detector()
         result = detector.comprehensive_analysis(
             request.code,
             request.language
@@ -202,7 +203,7 @@ async def batch_analysis(
     Useful for analyzing entire assignment submissions
     """
     try:
-        detector = get_detector()
+        detector = get_advanced_detector()
         results = detector.analyze_code_batch(
             request.codes,
             request.languages
@@ -234,17 +235,27 @@ async def find_similar_submissions(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Find most similar code snippets from a corpus
+    Find most similar code snippets from a corpus using HuggingFace API
     
     Useful for finding potential plagiarism cases
     """
     try:
-        detector = get_detector()
-        results = detector.find_similar_submissions(
-            query_code,
-            corpus_codes,
-            top_k=top_k
-        )
+        hf_client = get_hf_client()
+        results = []
+        
+        # Compare query against each corpus code
+        for idx, corpus_code in enumerate(corpus_codes):
+            try:
+                result = await hf_client.predict(query_code, corpus_code, threshold=0.7)
+                similarity = result.get("similarity_score", 0.0)
+                results.append((idx, similarity))
+            except Exception as e:
+                logger.error(f"Failed to compare with corpus code {idx}: {e}")
+                results.append((idx, 0.0))
+        
+        # Sort by similarity and get top_k
+        results.sort(key=lambda x: x[1], reverse=True)
+        top_results = results[:top_k]
         
         return {
             "query_code_length": len(query_code),
@@ -255,7 +266,7 @@ async def find_similar_submissions(
                     "similarity_score": score,
                     "is_suspicious": score >= 0.7
                 }
-                for idx, score in results
+                for idx, score in top_results
             ]
         }
     
@@ -273,25 +284,27 @@ async def get_model_status():
     Get ML model status and information
     """
     try:
-        detector = get_detector()
+        hf_client = get_hf_client()
+        health = await hf_client.health_check()
         
         return {
-            "status": "loaded",
-            "device": str(detector.device),
-            "model_type": "DualHeadCodeModel",
+            "status": "connected",
+            "api_url": hf_client.api_url,
+            "model_loaded": health.get("model_loaded", False),
+            "model_type": "CodeBERT (ONNX)",
+            "deployment": "HuggingFace Spaces",
             "capabilities": [
-                "AI-generated code detection",
+                "Code clone detection",
                 "Code similarity computation",
-                "Code embedding generation",
                 "Batch analysis"
             ]
         }
     
     except Exception as e:
         return {
-            "status": "not_loaded",
+            "status": "disconnected",
             "error": str(e),
-            "message": "Model needs to be trained first. Run train_detector.py"
+            "message": "Cannot connect to HuggingFace API"
         }
 
 

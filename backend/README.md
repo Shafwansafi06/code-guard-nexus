@@ -9,7 +9,16 @@ FastAPI backend service for the CodeGuard Nexus plagiarism detection platform.
 - **Role-Based Access Control**: Admin, Instructor, and Student roles
 - **RESTful API**: Complete CRUD operations for all resources
 - **File Upload**: Support for code submission uploads
-- **Real-time Analysis**: Plagiarism detection and comparison
+- **Real-time Analysis**: Plagiarism detection using HuggingFace deployed ML model
+- **ML-Powered Detection**: CodeBERT-based clone detection via HuggingFace Spaces API
+- **Hybrid Approach**: Combines Winnowing fingerprinting with deep learning
+
+## ML Model
+
+The backend uses a deployed CodeBERT model on HuggingFace Spaces:
+- **API**: https://shafwansafi06-code-clone-detector.hf.space
+- **Technology**: ONNX Runtime for 2-3x faster inference
+- **Model**: Fine-tuned CodeBERT for code clone detection
 
 ## Setup
 

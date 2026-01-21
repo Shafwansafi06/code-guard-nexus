@@ -8,8 +8,9 @@ from typing import List, Dict, Any
 from pathlib import Path
 import numpy as np
 from app.core.database import get_supabase
-from app.services.inference import get_detector
+from app.services.hf_api_client import get_hf_client
 from app.services.winnowing import winnowing_service
+from app.services.advanced_ai_detector import get_advanced_detector
 import asyncio
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,8 @@ logger = logging.getLogger(__name__)
 class PlagiarismService:
     def __init__(self):
         self.supabase = get_supabase()
-        self.detector = get_detector()
+        self.hf_client = get_hf_client()
+        self.ai_detector = get_advanced_detector()
         self.winnowing = winnowing_service
 
     async def run_assignment_analysis(self, assignment_id: str):
@@ -61,7 +63,7 @@ class PlagiarismService:
                                 all_fingerprints_for_sub.update(file_fingerprints)
                                 
                                 # Perform individual file AI detection
-                                ai_result = self.detector.detect_ai(code, file.get("language", "python"))
+                                ai_result = self.ai_detector.detect_ai(code, file.get("language", "python"))
                                 
                                 # Store analysis results
                                 analysis_data = {
@@ -81,29 +83,25 @@ class PlagiarismService:
                 
                 # Store fingerprints for the entire submission
                 submission_fingerprints[sub["id"]] = all_fingerprints_for_sub
-                
-                # Compute representative embedding for the entire submission (average of file embeddings)
-                if all_code_for_sub:
-                    embeddings = []
-                    for code in all_code_for_sub:
-                        embeddings.append(self.detector.get_embedding(code))
-                    
-                    if embeddings:
-                        avg_embedding = np.mean(embeddings, axis=0)
-                        submission_embeddings[sub["id"]] = avg_embedding
 
-            # 4. Compare submissions (Similarity Analysis)
+            # 4. Compare submissions using HuggingFace API (Code Clone Detection)
             for i, sub_a in enumerate(submissions):
                 for sub_b in submissions[i+1:]:
+                    # Get all code from both submissions
+                    code_a = "\n\n".join(all_code_for_sub) if sub_a["id"] in submission_embeddings else ""
+                    code_b = "\n\n".join(all_code_for_sub) if sub_b["id"] in submission_embeddings else ""
+                    
                     # Initialize scores
-                    embedding_similarity = 0.0
+                    ml_similarity = 0.0
                     winnowing_similarity = 0.0
                     
-                    # Compute Embedding Similarity
-                    if sub_a["id"] in submission_embeddings and sub_b["id"] in submission_embeddings:
-                        emb_a = submission_embeddings[sub_a["id"]]
-                        emb_b = submission_embeddings[sub_b["id"]]
-                        embedding_similarity = float(np.dot(emb_a, emb_b) / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b)))
+                    # Compute ML-based similarity using HuggingFace API
+                    if code_a and code_b:
+                        try:
+                            result = await self.hf_client.predict(code_a, code_b, threshold=0.5)
+                            ml_similarity = result.get("similarity_score", 0.0)
+                        except Exception as e:
+                            logger.error(f"HuggingFace API call failed: {e}")
                     
                     # Compute Winnowing Similarity
                     if sub_a["id"] in submission_fingerprints and sub_b["id"] in submission_fingerprints:
@@ -112,12 +110,10 @@ class PlagiarismService:
                             submission_fingerprints[sub_b["id"]]
                         )
                         
-                    # Combined Similarity Score
-                    # Weighted average: Winnowing is great for exact/near matches, Embeddings for semantic matches.
-                    # We take a max or weighted average. Using max(weighted_avg, winnowing) as winnowing is high confidence.
+                    # Combined Similarity Score (Winnowing + ML model)
                     combined_similarity = max(
-                        (embedding_similarity * 0.4) + (winnowing_similarity * 0.6),
-                        winnowing_similarity # If winnowing is very high, it should dominate
+                        (ml_similarity * 0.5) + (winnowing_similarity * 0.5),
+                        winnowing_similarity
                     )
                         
                     # Update comparison_pairs
