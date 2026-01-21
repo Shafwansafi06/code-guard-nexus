@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
+import { apiClient } from '@/lib/api';
 
 interface GoogleClassroomConnectProps {
   userId: string;
@@ -16,15 +16,16 @@ interface GoogleClassroomConnectProps {
 export function GoogleClassroomConnect({ userId, onConnected }: GoogleClassroomConnectProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
   const handleConnect = async () => {
     try {
       setIsConnecting(true);
 
-      // Get authorization URL from backend
-      const response = await axios.get(`${API_URL}/google-classroom/auth/url`);
-      const { auth_url, state } = response.data;
+      // Get authorization URL from backend (with authentication)
+      const response = await apiClient.get<{ auth_url: string; state: string }>(
+        '/google-classroom/auth/url'
+      );
+      const { auth_url, state } = response;
 
       // Store state in localStorage for verification
       localStorage.setItem('google_oauth_state', state);
