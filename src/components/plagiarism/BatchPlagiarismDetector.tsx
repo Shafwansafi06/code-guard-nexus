@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { api, BatchCloneResponse, ClonePair } from '@/lib/api';
-import { AlertCircle, Loader2, Users, FileText, AlertTriangle } from 'lucide-react';
+import { AlertCircle, Loader2, Users, FileText, AlertTriangle, FileCode } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -15,13 +15,32 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { detectLanguage, getLanguageDisplayName } from '@/lib/languageDetection';
 
 export function BatchPlagiarismDetector() {
   const [codes, setCodes] = useState<string[]>(['', '', '']);
+  const [detectedLangs, setDetectedLangs] = useState<(string | null)[]>([null, null, null]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchCloneResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.7);
+
+  // Auto-detect language for each code snippet
+  useEffect(() => {
+    codes.forEach((code, index) => {
+      if (code.trim().length > 50) {
+        const timeout = setTimeout(() => {
+          const detected = detectLanguage(code);
+          setDetectedLangs(prev => {
+            const newLangs = [...prev];
+            newLangs[index] = detected?.language || null;
+            return newLangs;
+          });
+        }, 500);
+        return () => clearTimeout(timeout);
+      }
+    });
+  }, [codes]);
 
   const handleCodeChange = (index: number, value: string) => {
     const newCodes = [...codes];
@@ -110,15 +129,23 @@ export function BatchPlagiarismDetector() {
                   <label className="text-sm font-medium">
                     Submission {index + 1}
                   </label>
-                  {codes.length > 2 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeCodeInput(index)}
-                    >
-                      Remove
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {detectedLangs[index] && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <FileCode className="h-3 w-3" />
+                        {getLanguageDisplayName(detectedLangs[index]!)}
+                      </Badge>
+                    )}
+                    {codes.length > 2 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCodeInput(index)}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <Textarea
                   value={code}

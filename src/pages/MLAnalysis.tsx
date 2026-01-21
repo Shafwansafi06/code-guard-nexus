@@ -29,7 +29,7 @@ export default function MLAnalysis() {
               <div className="space-y-1">
                 <p className="text-2xl font-bold">CodeBERT</p>
                 <p className="text-xs text-muted-foreground">
-                  AUC: 0.9994 • 99.94% accuracy
+                  AUC: 0.96 • 96% accuracy
                 </p>
               </div>
             </CardContent>

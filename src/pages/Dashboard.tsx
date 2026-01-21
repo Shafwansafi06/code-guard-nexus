@@ -38,10 +38,11 @@ import {
   Pie
 } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '@/lib/api';
-import { useState } from 'react';
+import { dashboardApi, apiClient } from '@/lib/api';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { OnboardingDialog } from '@/components/onboarding/OnboardingDialog';
 
 const submissionData = [
   { name: 'S', value: 400 },
@@ -101,12 +102,33 @@ const itemVariants = {
 
 export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const { toast } = useToast();
+
+  const { data: profile, refetch: refetchProfile } = useQuery({
+    queryKey: ['user-profile'],
+    queryFn: () => apiClient.get('/profile/me').then(res => res.data),
+  });
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: () => dashboardApi.stats(),
   });
+
+  useEffect(() => {
+    if (profile && !profile.onboarding_completed) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    refetchProfile();
+    toast({
+      title: 'Welcome! 🎉',
+      description: 'Your profile has been set up successfully.',
+    });
+  };
 
   const handleExport = () => {
     if (!stats) return;
@@ -131,8 +153,16 @@ export default function Dashboard() {
     { icon: AlertCircle, label: 'Pending Reviews', value: stats?.pending_reviews || '---', change: '+15%', positive: false },
     { icon: Clock, label: 'Assignments', value: stats?.total_assignments || '---', change: '+22%', positive: true },
   ];
+  
+  const greeting = profile?.full_name ? `Welcome back, ${profile.full_name.split(' ')[0]}!` : 'Dashboard Overview';
+  
   return (
     <DashboardLayout>
+      <OnboardingDialog 
+        open={showOnboarding} 
+        onComplete={handleOnboardingComplete}
+      />
+      
       <motion.div
         className="space-y-6"
         initial="hidden"
@@ -142,9 +172,16 @@ export default function Dashboard() {
         {/* Header */}
         <motion.div variants={itemVariants} className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold text-foreground">
-              Dashboard Overview
-            </h1>
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground">
+                {greeting}
+              </h1>
+              {profile?.subject && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  {profile.subject} {profile.institution && `• ${profile.institution}`}
+                </p>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative group">

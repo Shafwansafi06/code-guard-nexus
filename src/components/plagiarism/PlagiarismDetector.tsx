@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,14 +6,42 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { api, CloneDetectionResponse } from '@/lib/api';
-import { AlertCircle, CheckCircle, XCircle, Loader2, Code2, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle, Loader2, Code2, AlertTriangle, FileCode } from 'lucide-react';
+import { detectLanguage, getLanguageDisplayName } from '@/lib/languageDetection';
 
 export function PlagiarismDetector() {
   const [code1, setCode1] = useState('');
   const [code2, setCode2] = useState('');
+  const [detectedLang1, setDetectedLang1] = useState<string | null>(null);
+  const [detectedLang2, setDetectedLang2] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<CloneDetectionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-detect language as user types (debounced)
+  useEffect(() => {
+    if (code1.trim().length > 50) {
+      const timeout = setTimeout(() => {
+        const detected = detectLanguage(code1);
+        setDetectedLang1(detected?.language || null);
+      }, 500);
+      return () => clearTimeout(timeout);
+    } else {
+      setDetectedLang1(null);
+    }
+  }, [code1]);
+
+  useEffect(() => {
+    if (code2.trim().length > 50) {
+      const timeout = setTimeout(() => {
+        const detected = detectLanguage(code2);
+        setDetectedLang2(detected?.language || null);
+      }, 500);
+      return () => clearTimeout(timeout);
+    } else {
+      setDetectedLang2(null);
+    }
+  }, [code2]);
 
   const handleDetect = async () => {
     if (!code1.trim() || !code2.trim()) {
@@ -87,7 +115,15 @@ export function PlagiarismDetector() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Code Snippet 1</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Code Snippet 1</label>
+                {detectedLang1 && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <FileCode className="h-3 w-3" />
+                    {getLanguageDisplayName(detectedLang1)}
+                  </Badge>
+                )}
+              </div>
               <Textarea
                 value={code1}
                 onChange={(e) => setCode1(e.target.value)}
@@ -100,7 +136,15 @@ export function PlagiarismDetector() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Code Snippet 2</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Code Snippet 2</label>
+                {detectedLang2 && (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <FileCode className="h-3 w-3" />
+                    {getLanguageDisplayName(detectedLang2)}
+                  </Badge>
+                )}
+              </div>
               <Textarea
                 value={code2}
                 onChange={(e) => setCode2(e.target.value)}
