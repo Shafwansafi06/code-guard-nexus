@@ -35,3 +35,10 @@ service-account.json
 *.njsproj
 *.sln
 *.sw?
+
+# ML Model files (using HuggingFace API instead)
+backend/app/models/*.pt
+backend/app/models/*.onnx
+backend/app/models/tokenizer.json
+backend/app/models/merges.txt
+backend/app/models/vocab.json
