@@ -166,10 +166,10 @@ export function PlagiarismDetector() {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">Similarity Score</span>
                 <span className="text-2xl font-bold">
-                  {result.similarity_score.toFixed(1)}%
+                  {(result.similarity_score * 100).toFixed(1)}%
                 </span>
               </div>
-              <Progress value={result.similarity_score} className="h-3" />
+              <Progress value={result.similarity_score * 100} className="h-3" />
               <p className="text-sm text-muted-foreground">
                 {result.risk_description}
               </p>

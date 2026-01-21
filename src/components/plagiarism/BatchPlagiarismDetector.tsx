@@ -231,9 +231,9 @@ export function BatchPlagiarismDetector() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-semibold">
-                              {pair.similarity_score.toFixed(1)}%
+                              {(pair.similarity_score * 100).toFixed(1)}%
                             </div>
-                            <Progress value={pair.similarity_score} className="h-2 w-20" />
+                            <Progress value={pair.similarity_score * 100} className="h-2 w-20" />
                           </div>
                         </TableCell>
                         <TableCell>
