@@ -52,7 +52,7 @@ async def get_authorization_url():
         )
 
 
-@router.post("/auth/callback", response_model=GoogleOAuthTokenResponse)
+@router.get("/auth/callback", response_model=GoogleOAuthTokenResponse)
 async def oauth_callback(
     code: str = Query(..., description="Authorization code from Google"),
     state: str = Query(..., description="State parameter for CSRF protection"),
