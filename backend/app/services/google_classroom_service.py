@@ -218,13 +218,19 @@ class GoogleClassroomService:
         return service
     
     def _get_client_id(self) -> str:
-        """Get client ID from secrets file"""
+        """Get client ID from env vars or secrets file"""
+        if self.client_id:
+            return self.client_id
+        # Fall back to file
         with open(self.client_secrets_file, 'r') as f:
             secrets = json.load(f)
             return secrets['web']['client_id']
     
     def _get_client_secret(self) -> str:
-        """Get client secret from secrets file"""
+        """Get client secret from env vars or secrets file"""
+        if self.client_secret:
+            return self.client_secret
+        # Fall back to file
         with open(self.client_secrets_file, 'r') as f:
             secrets = json.load(f)
             return secrets['web']['client_secret']

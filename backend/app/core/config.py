@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: Optional[str] = None
     GOOGLE_CLIENT_SECRETS_FILE: Optional[str] = "client_secret.json"
     GOOGLE_OAUTH_REDIRECT_URI: Optional[str] = None  # Set via env var: https://code-guard-nexus.onrender.com/api/v1/google-classroom/auth/callback
+    FRONTEND_URL: Optional[str] = "https://code-guard-nexus.vercel.app"  # Frontend URL for OAuth redirects
     
     # ML Models
     MODEL_PATH: str = "./models"
