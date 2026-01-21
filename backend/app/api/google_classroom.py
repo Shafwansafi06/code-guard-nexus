@@ -6,6 +6,8 @@ Endpoints for Google Classroom integration
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional, List
 from datetime import datetime, timedelta
+import json
+import base64
 
 from app.schemas.google_classroom import (
     GoogleClassroomAuthURL,
@@ -21,12 +23,13 @@ from app.schemas.google_classroom import (
 )
 from app.services.google_classroom_service import google_classroom_service
 from app.core.database import get_supabase, get_supabase_admin
+from app.core.security import get_current_user
 
 router = APIRouter()
 
 
 @router.get("/auth/url", response_model=GoogleClassroomAuthURL)
-async def get_authorization_url():
+async def get_authorization_url(current_user: dict = Depends(get_current_user)):
     """
     Generate Google OAuth 2.0 authorization URL
     
@@ -34,7 +37,14 @@ async def get_authorization_url():
         Authorization URL and state for CSRF protection
     """
     try:
-        auth_url, state = google_classroom_service.create_authorization_url()
+        # Encode user_id in state parameter
+        state_data = {
+            'user_id': current_user['id'],
+            'csrf_token': google_classroom_service.generate_csrf_token()
+        }
+        state = base64.urlsafe_b64encode(json.dumps(state_data).encode()).decode()
+        
+        auth_url, _ = google_classroom_service.create_authorization_url(state)
         return GoogleClassroomAuthURL(auth_url=auth_url, state=state)
     except FileNotFoundError as e:
         print(f"File not found error: {e}")
@@ -55,8 +65,7 @@ async def get_authorization_url():
 @router.get("/auth/callback", response_model=GoogleOAuthTokenResponse)
 async def oauth_callback(
     code: str = Query(..., description="Authorization code from Google"),
-    state: str = Query(..., description="State parameter for CSRF protection"),
-    user_id: str = Query(..., description="User ID to associate tokens with"),
+    state: str = Query(..., description="State parameter with user_id"),
 ):
     """
     Handle OAuth callback and exchange code for tokens
@@ -64,6 +73,10 @@ async def oauth_callback(
     Stores tokens in database for future use
     """
     try:
+        # Decode state to get user_id
+        state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
+        user_id = state_data['user_id']
+        
         print(f"OAuth callback received - user_id: {user_id}, state: {state[:20]}...")
         
         # Exchange code for tokens

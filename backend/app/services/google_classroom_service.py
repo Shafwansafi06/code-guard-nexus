@@ -61,6 +61,10 @@ class GoogleClassroomService:
         """Get redirect URI from environment variable (dynamic)"""
         return os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8080/auth/google/callback")
     
+    def generate_csrf_token(self) -> str:
+        """Generate a random CSRF token"""
+        return secrets.token_urlsafe(32)
+    
     def create_authorization_url(self, state: Optional[str] = None) -> tuple[str, str]:
         """
         Create OAuth 2.0 authorization URL
