@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ const FALLBACK_COLORS = [
 ];
 
 export default function Courses() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [isDialogOpne, setIsDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -47,6 +48,30 @@ export default function Courses() {
 
   // Get user ID from auth context or local storage
   const localUserId = localStorage.getItem('user_id');
+
+  // Check for Google Classroom connection status
+  useEffect(() => {
+    const connected = searchParams.get('google_classroom_connected');
+    const error = searchParams.get('google_classroom_error');
+    
+    if (connected === 'true') {
+      toast({
+        title: 'Google Classroom Connected',
+        description: 'You can now import courses from Google Classroom.',
+      });
+      setIsImportDialogOpen(true);
+      // Remove query params
+      setSearchParams({});
+    } else if (error === 'true') {
+      toast({
+        title: 'Connection Failed',
+        description: 'Failed to connect to Google Classroom. Please try again.',
+        variant: 'destructive',
+      });
+      // Remove query params
+      setSearchParams({});
+    }
+  }, [searchParams, toast, setSearchParams]);
 
   const { data: user } = useQuery({
     queryKey: ['user'],

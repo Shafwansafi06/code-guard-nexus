@@ -4,10 +4,12 @@ Endpoints for Google Classroom integration
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from typing import Optional, List
 from datetime import datetime, timedelta
 import json
 import base64
+import os
 
 from app.schemas.google_classroom import (
     GoogleClassroomAuthURL,
@@ -62,7 +64,7 @@ async def get_authorization_url(current_user: dict = Depends(get_current_user)):
         )
 
 
-@router.get("/auth/callback", response_model=GoogleOAuthTokenResponse)
+@router.get("/auth/callback")
 async def oauth_callback(
     code: str = Query(..., description="Authorization code from Google"),
     state: str = Query(..., description="State parameter with user_id"),
@@ -70,8 +72,10 @@ async def oauth_callback(
     """
     Handle OAuth callback and exchange code for tokens
     
-    Stores tokens in database for future use
+    Stores tokens in database and redirects to frontend
     """
+    frontend_url = os.getenv("FRONTEND_URL", "https://codeguardnexus.vercel.app")
+    
     try:
         # Decode state to get user_id
         state_data = json.loads(base64.urlsafe_b64decode(state.encode()).decode())
@@ -105,15 +109,20 @@ async def oauth_callback(
         
         print(f"Token stored successfully for user: {user_id}")
         
-        return GoogleOAuthTokenResponse(**token_data)
+        # Redirect to courses page with success message
+        return RedirectResponse(
+            url=f"{frontend_url}/courses?google_classroom_connected=true",
+            status_code=302
+        )
     
     except Exception as e:
         print(f"OAuth callback error: {e}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to exchange authorization code: {str(e)}"
+        # Redirect to courses page with error message
+        return RedirectResponse(
+            url=f"{frontend_url}/courses?google_classroom_error=true",
+            status_code=302
         )
 
 
