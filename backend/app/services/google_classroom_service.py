@@ -41,6 +41,10 @@ class GoogleClassroomService:
         self.client_id = os.getenv("GOOGLE_CLIENT_ID")
         self.client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
         
+        print(f"GoogleClassroomService initialized:")
+        print(f"  - GOOGLE_CLIENT_ID: {'SET' if self.client_id else 'NOT SET'}")
+        print(f"  - GOOGLE_CLIENT_SECRET: {'SET' if self.client_secret else 'NOT SET'}")
+        
         # Fall back to file-based config if env vars not set
         client_secrets_file = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
         if not os.path.isabs(client_secrets_file):
@@ -52,6 +56,8 @@ class GoogleClassroomService:
         # Verify we have either env vars or file
         has_env_config = self.client_id and self.client_secret
         has_file_config = os.path.exists(self.client_secrets_file)
+        
+        print(f"  - client_secrets_file: {self.client_secrets_file} (exists: {has_file_config})")
         
         if not has_env_config and not has_file_config:
             print(f"WARNING: No Google OAuth config found. Set GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET or provide {self.client_secrets_file}")
@@ -220,8 +226,15 @@ class GoogleClassroomService:
     def _get_client_id(self) -> str:
         """Get client ID from env vars or secrets file"""
         if self.client_id:
+            print(f"Using GOOGLE_CLIENT_ID from environment variable")
             return self.client_id
         # Fall back to file
+        print(f"WARNING: GOOGLE_CLIENT_ID not found, attempting to read from {self.client_secrets_file}")
+        if not os.path.exists(self.client_secrets_file):
+            raise FileNotFoundError(
+                f"Google client secrets file not found at {self.client_secrets_file}. "
+                "Please set GOOGLE_CLIENT_ID environment variable."
+            )
         with open(self.client_secrets_file, 'r') as f:
             secrets = json.load(f)
             return secrets['web']['client_id']
@@ -229,8 +242,15 @@ class GoogleClassroomService:
     def _get_client_secret(self) -> str:
         """Get client secret from env vars or secrets file"""
         if self.client_secret:
+            print(f"Using GOOGLE_CLIENT_SECRET from environment variable")
             return self.client_secret
         # Fall back to file
+        print(f"WARNING: GOOGLE_CLIENT_SECRET not found, attempting to read from {self.client_secrets_file}")
+        if not os.path.exists(self.client_secrets_file):
+            raise FileNotFoundError(
+                f"Google client secrets file not found at {self.client_secrets_file}. "
+                "Please set GOOGLE_CLIENT_SECRET environment variable."
+            )
         with open(self.client_secrets_file, 'r') as f:
             secrets = json.load(f)
             return secrets['web']['client_secret']
