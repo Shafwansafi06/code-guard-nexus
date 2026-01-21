@@ -333,6 +333,9 @@ async def detect_code_clone(
             threshold=request.threshold
         )
         
+        # Add threshold to response since HF API doesn't return it
+        result['threshold'] = request.threshold
+        
         return CloneDetectionResponse(**result)
     
     except Exception as e:

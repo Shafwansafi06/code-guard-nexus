@@ -335,7 +335,7 @@ export const submissionsApi = {
   upload: (assignmentId: string, studentIdentifier: string, files: File[]): Promise<any> => {
     const formData = new FormData();
     formData.append('assignment_id', assignmentId);
-    formData.append('student_identifier', studentIdentifier);
+    // Note: student_identifier removed - backend extracts from filename
     files.forEach((file) => {
       formData.append('files', file);
     });

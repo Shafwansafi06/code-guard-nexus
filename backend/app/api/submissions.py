@@ -49,11 +49,10 @@ async def create_submission(
 @router.post("/upload", response_model=BulkUploadResponse)
 async def upload_submission_files(
     assignment_id: str = Form(...),
-    student_identifier: str = Form(...),
     files: List[UploadFile] = File(...),
     current_user: dict = Depends(get_current_user)
 ):
-    """Upload files for a submission"""
+    """Upload files for a submission - each file creates a separate submission"""
     supabase = get_supabase()
     
     try:
@@ -66,27 +65,25 @@ async def upload_submission_files(
                 detail="Assignment not found"
             )
         
-        # Create or get submission
-        existing_submission = supabase.table("submissions").select("*").eq("assignment_id", assignment_id).eq("student_identifier", student_identifier).execute()
+        # Process each file as a separate submission
+        all_uploaded_files = []
+        submissions_created = []
         
-        if existing_submission.data:
-            submission = existing_submission.data[0]
-        else:
+        for file in files:
+            # Extract student identifier from filename (e.g., "student1.py" -> "student1")
+            student_identifier = Path(file.filename).stem
+            
+            # Create submission for this file
             submission_data = {
                 "assignment_id": assignment_id,
                 "student_identifier": student_identifier,
-                "file_count": 0,
+                "file_count": 1,
                 "status": "pending"
             }
             submission_result = supabase.table("submissions").insert(submission_data).execute()
             submission = submission_result.data[0]
-        
-        # Process and upload files
-        uploaded_files = []
-        upload_dir = Path(f"/tmp/submissions/{submission['id']}")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        for file in files:
+            submissions_created.append(submission)
+            
             # Read file content
             content = await file.read()
             
@@ -94,6 +91,9 @@ async def upload_submission_files(
             file_hash = hashlib.sha256(content).hexdigest()
             
             # Save file locally (in production, upload to cloud storage)
+            upload_dir = Path(f"/tmp/submissions/{submission['id']}")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            
             file_path = upload_dir / file.filename
             async with aiofiles.open(file_path, 'wb') as f:
                 await f.write(content)
@@ -110,18 +110,19 @@ async def upload_submission_files(
             }
             
             file_result = supabase.table("files").insert(file_data).execute()
-            uploaded_files.append(file_result.data[0])
-        
-        # Update submission file count
-        supabase.table("submissions").update({
-            "file_count": len(uploaded_files),
-            "status": "processing"
-        }).eq("id", submission["id"]).execute()
+            all_uploaded_files.append(file_result.data[0])
+            
+            # Update this submission's status
+            supabase.table("submissions").update({
+                "file_count": 1,
+                "status": "processing"
+            }).eq("id", submission["id"]).execute()
         
         return {
-            "submission_id": submission["id"],
-            "files_uploaded": len(uploaded_files),
-            "files": uploaded_files
+            "submission_id": submissions_created[0]["id"] if submissions_created else None,  # Return first submission ID for compatibility
+            "submissions_created": len(submissions_created),
+            "files_uploaded": len(all_uploaded_files),
+            "files": all_uploaded_files
         }
         
     except HTTPException:
