@@ -63,7 +63,7 @@ class PlagiarismService:
                                 all_fingerprints_for_sub.update(file_fingerprints)
                                 
                                 # Perform individual file AI detection
-                                ai_result = self.ai_detector.detect_ai(code, file.get("language", "python"))
+                                ai_result = self.ai_detector.detect(code, file.get("language", "python"))
                                 
                                 # Store analysis results
                                 analysis_data = {

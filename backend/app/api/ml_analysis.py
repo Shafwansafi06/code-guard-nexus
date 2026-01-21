@@ -96,7 +96,7 @@ async def detect_ai_generated_code(
     """
     try:
         detector = get_advanced_detector()
-        result = detector.detect_ai(request.code, request.language)
+        result = detector.detect(request.code, request.language)
         
         # Add risk assessment
         if result['ai_score'] >= 0.8:
