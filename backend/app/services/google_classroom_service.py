@@ -194,11 +194,16 @@ class GoogleClassroomService:
             Google Classroom service object
         """
         # Parse expiry datetime if provided
+        # Google auth library expects timezone-naive UTC datetime
         expiry = None
         if expires_at:
             try:
-                expiry = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-            except:
+                # Parse the ISO format datetime
+                dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                # Convert to timezone-naive UTC datetime for Google auth library
+                expiry = dt.replace(tzinfo=None) if dt.tzinfo else dt
+            except Exception as e:
+                print(f"Failed to parse expires_at '{expires_at}': {e}")
                 pass
         
         credentials = Credentials(
