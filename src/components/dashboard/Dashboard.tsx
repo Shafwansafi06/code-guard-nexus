@@ -62,29 +62,47 @@ export function Dashboard({ assignmentId, assignment: initialAssignment }: Dashb
   const handlePreview = async (filename: string, submissionId?: string) => {
     if (!submissionId) {
       setPreviewFile(filename);
-      setPreviewCode('# Mock code preview');
+      setPreviewCode('// No submission ID provided');
       return;
     }
 
     try {
-      const submission = await api.submissions.get(submissionId);
+      const content = await api.submissions.getContent(submissionId);
       setPreviewFile(filename);
-      // For now, we just show the filename as placeholder or first file content if available
-      setPreviewCode(submission.files?.[0]?.filename ? `// Content for ${submission.files[0].filename}` : '// No content available');
+      setPreviewCode(content.content || '// No content available');
     } catch (error) {
+      console.error('Error loading code:', error);
       setPreviewFile(filename);
       setPreviewCode('// Failed to load code');
     }
   };
 
-  const handleCompare = (pair: any) => {
-    setComparePair({
-      fileA: pair.submission_a?.student_identifier || pair.fileA,
-      fileB: pair.submission_b?.student_identifier || pair.fileB,
-      similarity: pair.similarity_score || pair.similarity,
-      codeA: '// Code A',
-      codeB: '// Code B'
-    });
+  const handleCompare = async (pair: any) => {
+    try {
+      // Fetch content for both submissions
+      const [contentA, contentB] = await Promise.all([
+        api.submissions.getContent(pair.submission_a_id),
+        api.submissions.getContent(pair.submission_b_id)
+      ]);
+
+      setComparePair({
+        fileA: pair.submission_a?.student_identifier || contentA.student_identifier || 'Unknown',
+        fileB: pair.submission_b?.student_identifier || contentB.student_identifier || 'Unknown',
+        similarity: Math.round((pair.similarity_score || 0) * 100),
+        codeA: contentA.content || '// No content available',
+        codeB: contentB.content || '// No content available'
+      });
+    } catch (error) {
+      console.error('Error loading comparison:', error);
+      // Fallback to placeholders if fetch fails
+      setComparePair({
+        fileA: pair.submission_a?.student_identifier || pair.fileA || 'Unknown',
+        fileB: pair.submission_b?.student_identifier || pair.fileB || 'Unknown',
+        similarity: Math.round((pair.similarity_score || pair.similarity || 0) * 100),
+        codeA: '// Failed to load code',
+        codeB: '// Failed to load code'
+      });
+    }
   };
 
   if (!assignmentId) {

@@ -323,6 +323,9 @@ export const submissionsApi = {
   get: (id: string): Promise<Submission> =>
     apiClient.get(`/submissions/${id}`),
 
+  getContent: (id: string): Promise<{ submission_id: string; content: string; files: any[]; student_identifier: string }> =>
+    apiClient.get(`/submissions/${id}/content`),
+
   create: (data: any): Promise<Submission> =>
     apiClient.post('/submissions', data),
 

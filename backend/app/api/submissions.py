@@ -279,3 +279,85 @@ async def delete_submission(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to delete submission: {str(e)}"
         )
+
+
+@router.get("/{submission_id}/content")
+async def get_submission_content(
+    submission_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get the actual code content for a submission"""
+    supabase = get_supabase()
+    
+    try:
+        # Get submission
+        submission_result = supabase.table("submissions").select("*").eq("id", submission_id).execute()
+        
+        if not submission_result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Submission not found"
+            )
+        
+        # Get associated files
+        files_result = supabase.table("files").select("*").eq("submission_id", submission_id).execute()
+        
+        if not files_result.data:
+            return {
+                "submission_id": submission_id,
+                "content": "",
+                "files": [],
+                "message": "No files found for this submission"
+            }
+        
+        # Read file content from disk
+        all_content = []
+        file_details = []
+        
+        for file_record in files_result.data:
+            file_path = Path(f"/tmp/submissions/{submission_id}/{file_record['filename']}")
+            
+            if file_path.exists():
+                try:
+                    async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = await f.read()
+                        all_content.append(content)
+                        file_details.append({
+                            "filename": file_record['filename'],
+                            "language": file_record.get('language', 'unknown'),
+                            "content": content
+                        })
+                except Exception as e:
+                    print(f"Error reading file {file_path}: {e}")
+                    file_details.append({
+                        "filename": file_record['filename'],
+                        "language": file_record.get('language', 'unknown'),
+                        "content": f"// Error reading file: {str(e)}"
+                    })
+            else:
+                file_details.append({
+                    "filename": file_record['filename'],
+                    "language": file_record.get('language', 'unknown'),
+                    "content": f"// File not found on disk: {file_path}"
+                })
+        
+        # Combine all content
+        combined_content = "\n\n".join(all_content) if all_content else "// No content available"
+        
+        return {
+            "submission_id": submission_id,
+            "content": combined_content,
+            "files": file_details,
+            "student_identifier": submission_result.data[0].get('student_identifier', 'unknown')
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting submission content: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get submission content: {str(e)}"
+        )

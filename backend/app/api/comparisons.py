@@ -55,7 +55,7 @@ async def get_comparison(
     comparison_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get a specific comparison pair by ID"""
+    """Get a specific comparison pair by ID with file contents"""
     supabase = get_supabase()
     
     try:
@@ -73,17 +73,53 @@ async def get_comparison(
         sub_a = supabase.table("submissions").select("*").eq("id", comparison["submission_a_id"]).execute()
         sub_b = supabase.table("submissions").select("*").eq("id", comparison["submission_b_id"]).execute()
         
+        # Get file contents for both submissions
+        from pathlib import Path
+        import aiofiles
+        
+        async def get_submission_content(submission_id: str) -> str:
+            """Helper to get submission content"""
+            files_result = supabase.table("files").select("*").eq("submission_id", submission_id).execute()
+            
+            if not files_result.data:
+                return "// No files found for this submission"
+            
+            all_content = []
+            for file_record in files_result.data:
+                file_path = Path(f"/tmp/submissions/{submission_id}/{file_record['filename']}")
+                
+                if file_path.exists():
+                    try:
+                        async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                            content = await f.read()
+                            all_content.append(f"// File: {file_record['filename']}\n{content}")
+                    except Exception as e:
+                        all_content.append(f"// Error reading {file_record['filename']}: {str(e)}")
+                else:
+                    all_content.append(f"// File not found: {file_record['filename']}")
+            
+            return "\n\n".join(all_content) if all_content else "// No content available"
+        
+        # Get contents
+        content_a = await get_submission_content(comparison["submission_a_id"])
+        content_b = await get_submission_content(comparison["submission_b_id"])
+        
         return {
             **comparison,
             "submission_a": sub_a.data[0] if sub_a.data else None,
-            "submission_b": sub_b.data[0] if sub_b.data else None
+            "submission_b": sub_b.data[0] if sub_b.data else None,
+            "content_a": content_a,
+            "content_b": content_b
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error fetching comparison: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch comparison: {str(e)}"
         )
 
