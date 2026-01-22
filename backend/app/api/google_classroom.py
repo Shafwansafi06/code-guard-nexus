@@ -310,7 +310,6 @@ async def import_course_from_google_classroom(
             'google_classroom_id': google_course.id,
             'sync_enabled': request.sync_enabled,
             'last_synced_at': datetime.utcnow().isoformat(),
-            'created_at': datetime.utcnow().isoformat(),
         }
         
         result = admin_supabase.table('courses').insert(course_data).execute()
@@ -325,6 +324,9 @@ async def import_course_from_google_classroom(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error importing course: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to import course: {str(e)}"
